@@ -1,4 +1,6 @@
-"""Public application readiness check; no configuration or error details exposed."""
+"""
+Public application readiness check; no configuration or error details exposed.
+"""
 
 from django.db import DatabaseError, connection
 from django.http import JsonResponse
