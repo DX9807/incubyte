@@ -114,3 +114,27 @@ combined value and verify the fix, rotation handling, and cross-origin isolation
 All 26 authentication/provisioning tests passed, including two new Swagger
 regressions; schema validation passed. Backend CSRF enforcement stayed enabled.
 No Git staging or commit was performed.
+
+Phase 8 was explicitly limited to React setup, login, and layout. After inspecting
+the clean repository and passing all 137 backend tests, Codex used the Sites skill's
+local workflow for frontend implementation and browser verification. The user
+confirmed that React must remain a separate app and be hosted separately, with
+backend source unchanged. React/Vite, Material UI/Emotion, and React Router were
+installed and pinned; Playwright is test-only. No Site registration, publication,
+or helper-owned Git synchronization was used, preserving the no-auto-commit rule.
+
+Added a CSRF-aware Fetch client, session context, login/error/loading states,
+protected routes, responsive layout, and explicit navigation placeholders. API
+tests verify header/token handling and error cases. Chromium checks use temporary
+HR credentials against the actual Django API and both Vite dev and built preview.
+The initial browser selectors were corrected for Material UI's required-field
+label markers; the UI itself rendered correctly. All three scenarios then passed
+on both servers. No later-phase screens or backend source changes were added.
+
+Final Phase 8 checks passed clean npm ci, 12 Node API-client tests, the Vite build,
+and three Chromium scenarios on each of dev and production preview. Screenshots
+were visually inspected. All 137 backend tests and migration/static/schema/
+deployment/Gunicorn/HTTP checks passed again. Verification fixtures were removed,
+seeded records were preserved, and Git confirmed no backend source changes.
+The separate frontend deployment contract and exact run commands are documented.
+No publication, staging, or commit was performed.

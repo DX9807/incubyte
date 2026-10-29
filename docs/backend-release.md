@@ -94,9 +94,10 @@ without overriding process values. Serve behind an HTTPS proxy; enable
 its own trusted value.
 
 WhiteNoise serves collected Admin/DRF assets from ignored `backend/staticfiles`
-using hashed/compressed manifest storage. Phase 8 can add React build output and
-an HTML entry route without changing existing APIs. No frontend configuration or
-files are introduced in Phase 7, and static collection works without React.
+using hashed/compressed manifest storage. The Phase 8 frontend is a separately
+hosted Vite application, as explicitly requested by the user. Django does not
+serve React HTML/assets or require its build. See `frontend/README.md` for the
+frontend host's same-origin API proxy and SPA fallback requirements.
 
 Only `/api/health/` is exempt from production HTTPS redirects, so HTTP hosting
 probes execute `SELECT 1` and receive real readiness 200/sanitized 503 responses.

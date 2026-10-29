@@ -12,3 +12,8 @@ backend/staticfiles/
 *.sqlite3
 *.log
 .DS_Store
+node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+.sites-runtime/

@@ -1,13 +1,17 @@
 # ACME Salary Management
 
 Salary management for ACME's HR team, built incrementally from the supplied
-assessment. **Implemented: Phases 1–7; backend complete.** Django Admin and staff-only REST APIs
+assessment. **Implemented: Phases 1–8.** The backend is complete; a separate React/Vite
+application provides login, logout, protected navigation, and a responsive layout.
+Django Admin and staff-only REST APIs
 manage employees with salary revisions and history. Admin history stays read-only. See
 [requirements](docs/requirements.md), [database design](docs/architecture.md), and
 [API documentation](docs/api.md), and [AI usage](docs/ai-usage.md).
-Country-specific salary analytics are available. React is not implemented yet.
+Country-specific salary analytics are available through the API. Frontend Dashboard
+and Employees routes are placeholders for later phases.
 Session login/logout, current-user identity, and CSRF bootstrap are available.
 See the [backend release runbook](docs/backend-release.md) for provisioning and deployment.
+See [frontend setup and separate hosting](frontend/README.md) for the React app.
 
 The deterministic `seed_employees` command can populate 10,000 fictional employees
 with current salaries and history. See [seed behavior and verification](docs/seed-data.md).
@@ -104,6 +108,20 @@ Expected: HTTP 200 and `{"status": "ok"}`. The public GET-only endpoint executes
 It does not certify that migrations are applied; migration checks are a separate
 release step. Static collection is needed before tests that render Admin with
 manifest storage. Test data is created in a separate `test_<PGDATABASE>` database.
+
+## Frontend
+
+To run the separate frontend while Django is running:
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Open `http://127.0.0.1:5173` and sign in with an active HR staff account. The
+frontend proxies API requests locally and builds independently with
+`npm run build`. Django does not serve its HTML or bundle, as requested.
 
 ## Seed data
 
@@ -294,5 +312,21 @@ readiness, docs/static assets, and HTTPS redirection. Temporary fixtures were
 removed; 10,000 seeded employees and 12,500 salaries were preserved.
 Public deployment remains pending hosting credentials and a target service.
 
-The backend implementation is complete. Phase 8 (React setup and authentication
-UI) requires an explicit instruction to proceed; no frontend is implemented.
+Phase 8 adds an independent React/Vite app in `frontend/`, with Material UI,
+React Router, one Fetch client, CSRF-aware login/logout, restored sessions,
+protected routes, responsive navigation, and loading/error states. The user
+explicitly chose separate frontend hosting and unchanged backend source, overriding
+the master prompt's combined Django/React serving plan. Production frontend hosts
+must proxy `/api/` and support SPA route refresh; see `frontend/README.md`.
+Employee, salary, and dashboard business screens are not implemented in this phase.
+
+Phase 8 verification: clean npm installation, all 12 Fetch-client tests, and the
+Vite production build passed. Three Chromium scenarios passed on both dev and
+built preview, covering real login/CSRF/logout, protected routes, refresh,
+mobile navigation, retries, and pending submissions. Desktop/mobile screenshots
+were inspected. All 137 backend tests, migrations, static/schema checks,
+production checks, and backend HTTP startup flows passed. Backend source and
+the 10,000-employee/12,500-salary dataset were preserved. No deployment, staging,
+or commit was performed.
+
+Phase 9 will add the employee management UI after an explicit instruction to proceed.

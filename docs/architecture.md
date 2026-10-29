@@ -228,3 +228,30 @@ is exempt from HTTPS redirects so hosting probes receive genuine readiness
 status. No business route is exempt. Deployment uses one application plus
 PostgreSQL; `docs/backend-release.md` records exact release/provisioning commands.
 No model migration, extra service, authentication dependency, or frontend is added.
+
+## Phase 8: Independent React/Vite client
+
+The user explicitly chose separate frontend hosting and unchanged backend source,
+overriding the master prompt's combined static-serving choice. `frontend/` owns its
+package manifest, lockfile, Vite configuration, source, tests, and static output.
+No backend model, route, settings, migration, or dependency changed in this phase.
+
+BrowserRouter provides login, protected Dashboard/Employees placeholders, and a
+shared responsive layout. An auth context checks `/api/me/` on startup and keeps
+identity only in memory. Service outages have retry UI rather than masquerading
+as invalid credentials. Invalid staff sessions redirect to login. No business
+screen or reporting feature is implemented ahead of its phase.
+
+The one native Fetch client sends same-origin cookies, obtains a fresh CSRF
+bootstrap for each write, sets one normalized header, handles JSON/HTML errors
+and 204 responses, and preserves cancellation. Refreshing CSRF at write boundaries
+adds a small request cost while avoiding stale-token coordination across login
+and multiple tabs. Logout only clears local identity after backend success or
+confirmed expiration; no credentials/tokens are stored in browser storage.
+
+Vite's local dev/preview proxy preserves the browser Host/Origin pair. For separate
+production hosting, the frontend host proxies `/api/*` to Django and serves the
+SPA HTML for application routes. The existing backend environment settings permit
+the trusted frontend origin/host without adding CORS or changing backend code.
+Static assets are built independently and never installed into Django's static
+root. Node API-client tests and Chromium integration tests verify the contract.

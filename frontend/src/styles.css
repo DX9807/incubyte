@@ -1,0 +1,22 @@
+html { min-width: 320px; }
+body { margin: 0; }
+button, a, input { -webkit-tap-highlight-color: transparent; }
+.eyebrow { font-size: 11px !important; font-weight: 700 !important; letter-spacing: 1.8px !important; }
+.login-page { min-height: 100dvh; display: grid; grid-template-columns: minmax(380px, 45%) 1fr; }
+.login-story { color: #fff; background: #183b30; padding: 48px 56px 32px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+.login-story::after { content: ''; position: absolute; width: 500px; height: 500px; bottom: -320px; right: -250px; border: 1px solid #ffffff15; border-radius: 50%; }
+.login-main { padding: 64px 40px 32px; display: flex; align-items: center; flex-direction: column; justify-content: center; background: #fafbf8; }
+.story-art { height: 185px; position: relative; margin-top: 32px; width: 290px; }
+.art-orbit { position: absolute; border: 1px solid #7ba18b; border-radius: 50%; width: 150px; height: 150px; left: 80px; top: 0; }
+.art-block { position: absolute; width: 106px; height: 106px; border-radius: 22px; transform: rotate(-12deg); }
+.art-block-one { background: #83b397; top: 44px; left: 22px; }
+.art-block-two { background: #d6dfb2; top: 70px; left: 132px; transform: rotate(10deg); border-radius: 22px 22px 65px 22px; }
+.art-dot { position: absolute; width: 18px; height: 18px; border-radius: 50%; background: #d6dfb2; left: 215px; top: 14px; }
+@media (max-width: 899px) {
+  .login-page { display: block; }
+  .login-story { display: none; }
+  .login-main { min-height: 100dvh; padding: 36px 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
