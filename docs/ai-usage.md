@@ -60,3 +60,24 @@ Final Phase 5 verification passed all 98 tests, including 20 analytics tests and
 the existing PostgreSQL concurrency tests. Migration consistency, static files,
 OpenAPI validation, production settings, development/Gunicorn HTTP checks, and
 dependency/compilation checks passed. No Git staging or commit was performed.
+
+For Phase 6, the user requested only deterministic seeding and explicitly carried
+the no-auto-commit preference into future prompts. Codex inspected the clean
+repository, verified all 98 baseline tests, installed and pinned the master
+prompt's Faker dependency, and added the batched management command and tests.
+Local package inspection found no `en_SG` provider, so Singapore uses English GB
+names as a documented synthetic-data choice. Seed/index identities, fixed dates,
+and per-employee generators preserve reproducibility across count changes. The
+13 seed tests passed, including actual creation of 10,000 employees and 12,500
+salary records, preservation of existing edits, rollback, and analytics checks.
+No models, migrations, API behavior, authentication endpoints, or frontend were
+added. No staging or commit is performed by the agent.
+
+Final Phase 6 verification passed all 111 tests, migration consistency, static
+collection, strict schema validation, dependency/compilation checks, production
+settings, development/Gunicorn startup, and HTTPS redirection. The previous
+temporary verification script was no longer present, so it was recreated and
+the checks executed successfully. The local database was populated with 10,000
+employees and 12,500 salaries; an immediate rerun created nothing. Pagination
+and all country analytics were exercised against the persisted data. No public
+deployment, staging, or commit was performed.

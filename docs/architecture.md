@@ -173,3 +173,28 @@ decimal half-up output rounding. Aggregates retain database decimal precision;
 serializers round only the response to two decimal places. Empty sums are zero;
 empty average/minimum/maximum remain null. Response totals allow 24 digits to
 accommodate compensation across 10,000 employees. No migrations are required.
+
+## Phase 6: Reproducible seed command
+
+`employees/management/commands/seed_employees.py` adds an offline Django command,
+using pinned Faker and a per-employee Random instance. Seed/index identities keep
+codes, emails, names, country, department, role, money, and effective dates stable
+when count changes or earlier employees already exist. A fixed country cycle
+matches the suggested 40/25/15/10/10 percent split at 10,000 employees. Fixed past
+effective dates avoid date-dependent output. Faker instances are local to the
+command; it does not reseed application-wide random state.
+
+All writes are atomic. Existing matching code/email pairs are skipped; collisions
+abort and roll back rather than overwriting profiles or salary history. Memory
+and SQL parameter lists are bounded by 500-employee batches. Employee bulk inserts
+return PostgreSQL primary keys, then initial/revision salaries are bulk inserted
+with those foreign keys. This avoids a query per generated record. Six department
+names and small role lists provide readable synthetic data without new models.
+
+The command deliberately uses bulk insertion with controlled values rather than
+calling `full_clean` for every record. Tests verify generated field values,
+currencies, dates, salary history, full 10,000-row counts, query budgets, rollback,
+repeatability, and API compatibility. Database constraints remain active. Seeded
+data is fictional; no employee data is fetched externally. Detailed behavior and
+the distinction between business reproducibility and timestamps/IDs are documented
+in `docs/seed-data.md`. Existing models, migrations, and API contracts are unchanged.

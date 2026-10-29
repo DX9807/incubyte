@@ -1,11 +1,14 @@
 # ACME Salary Management
 
 Salary management for ACME's HR team, built incrementally from the supplied
-assessment. **Implemented: Phases 1–5.** Django Admin and staff-only REST APIs
+assessment. **Implemented: Phases 1–6.** Django Admin and staff-only REST APIs
 manage employees with salary revisions and history. Admin history stays read-only. See
 [requirements](docs/requirements.md), [database design](docs/architecture.md), and
 [API documentation](docs/api.md), and [AI usage](docs/ai-usage.md).
 Country-specific salary analytics are available. React is not implemented yet.
+
+The deterministic `seed_employees` command can populate 10,000 fictional employees
+with current salaries and history. See [seed behavior and verification](docs/seed-data.md).
 
 ## Local setup
 
@@ -92,6 +95,20 @@ Expected: HTTP 200 and `{"status": "ok"}`. The public GET-only endpoint executes
 It does not certify that migrations are applied; migration checks are a separate
 release step. Static collection is needed before tests that render Admin with
 manifest storage. Test data is created in a separate `test_<PGDATABASE>` database.
+
+## Seed data
+
+To populate a local or demo database after migrations:
+
+```bash
+python backend/manage.py seed_employees --count 10000 --seed 42
+```
+
+This creates 10,000 employees and 12,500 salary records in an empty database.
+Rerunning the same seed/count skips existing employees. Increasing the count
+appends employees; reducing it deletes nothing. Different seeds create separate
+datasets. Existing data is preserved, and collisions abort the entire command.
+See [seed details](docs/seed-data.md) before running against a populated database.
 
 ## Production deployment
 
@@ -235,5 +252,19 @@ responses for analytics. HTTPS redirection worked. Production checks used the
 documented HSTS options and a generated verification secret. No public deployment
 was performed.
 
-Phase 6 will introduce the deterministic employee seed command after an explicit
-instruction to continue.
+Phase 6 adds the deterministic, batched `seed_employees` management command and
+13 verification tests, including a real 10,000-record run. Faker is the only new
+dependency. Existing models, migrations, and API behavior remain unchanged.
+
+Phase 6 verification: all 111 tests passed (98 existing and 13 new), including
+the full 10,000-row seed test and PostgreSQL concurrency tests. Migrations ran
+with nothing pending, and no model changes were detected. Static collection,
+strict OpenAPI validation, dependency/compilation checks, production deployment
+checks, development/Gunicorn HTTP checks, and HTTPS redirection passed.
+The configured local database was also populated with seed 42: exactly 10,000
+employees and 12,500 salary records. A second run created nothing and skipped
+all 10,000 employees. Pagination and all country analytics were verified against
+that persisted dataset. No public deployment or Git staging/commit was performed.
+
+Phase 7 will add the remaining authentication endpoints and backend deployment
+hardening after an explicit instruction to continue. No frontend is implemented.
