@@ -1,8 +1,10 @@
 # ACME Salary Management
 
 Salary management for ACME's HR team, built incrementally from the supplied
-assessment. **Implemented: Phase 1 only.** No employee/salary models or React UI
-exist yet. See [requirements](docs/requirements.md) and [AI usage](docs/ai-usage.md).
+assessment. **Implemented: Phases 1–2.** The Django Admin manages departments and
+employees with initial salaries and read-only history. See
+[requirements](docs/requirements.md), [database design](docs/architecture.md), and
+[AI usage](docs/ai-usage.md). Business REST APIs and React are not implemented yet.
 
 ## Local setup
 
@@ -19,8 +21,8 @@ python -c 'from django.core.management.utils import get_random_secret_key; print
 
 Put the generated secret in `.env` as `DJANGO_SECRET_KEY='generated value'`.
 Set `PGPASSWORD` to a local database password, also quoted as a shell value.
-Do not commit `.env`. Configuration uses process environment variables;
-Django does not automatically read `.env`. Load it before management commands:
+Do not commit `.env`. The existing settings use `python-dotenv` to read `.env`
+without overriding process environment variables. You may also load it explicitly:
 
 ```bash
 set -a
@@ -50,12 +52,16 @@ account, use that installation's admin login method for provisioning instead.
 python backend/manage.py migrate
 python backend/manage.py collectstatic --noinput
 python backend/manage.py createsuperuser
-python backend/manage.py test config
+python backend/manage.py test config employees compensation
 python backend/manage.py runserver 127.0.0.1:8000
 ```
 
 Visit `http://127.0.0.1:8000/admin/` and sign in using the superuser you created.
-Only built-in users and groups are available in this phase.
+Create a department, then add an employee with the required initial salary inline.
+Currency derives from country. Employee profile editing and deactivation are
+available; country is read-only after creation. Salary history can be viewed in
+the employee page and Salary records list. Existing history cannot be changed or
+deleted, and salary revisions are not exposed in Phase 2.
 
 ```bash
 curl --fail http://127.0.0.1:8000/api/health/
@@ -137,13 +143,28 @@ health, Admin login, and Admin CSS. Production checks passed without warnings
 with the dedicated HTTPS domain HSTS options enabled; HTTPS redirect was verified.
 No public hosting environment was provisioned.
 
-The current workspace has an ignored `.env` pointing to an isolated verification
-database on port 55432 under `/tmp/acme-phase1-postgres`. Its local-only trust
-authentication is for this temporary verification instance. For a persistent
-setup, provision a password-protected database using the instructions above and
-update `.env`. The pre-existing `venv/` was preserved; `.venv/` uses Python 3.12.
+Phase 1 used an isolated verification database on port 55432 under
+`/tmp/acme-phase1-postgres`; Phase 2 uses the database currently configured in
+the workspace's ignored `.env`. Set the database connection values for your own
+installation. The pre-existing `venv/` was preserved; `.venv/` uses Python 3.12.
 This machine lacked Python 3.12's `ensurepip`, so pip from the existing environment
 was used with `--python .venv/bin/python` to install dependencies and pip there.
 
-Phase 2 will introduce Department, Employee, SalaryRecord, migrations, model
-validation, and Admin management after an explicit instruction to continue.
+Phase 2 adds the three business models, initial migrations, model/database
+validation, and Admin tests. Run the full suite with
+`python backend/manage.py test config employees compensation`. The tests cover
+uniqueness, positive salaries, supported countries/currencies, date validation,
+deactivation/history retention, protected relationships, initial salary rollback,
+and Admin restrictions. The database design documents the distinction between
+database constraints and application validation.
+
+Phase 2 verification: both initial business migrations applied successfully;
+all 33 tests passed against PostgreSQL, including the five Phase 1 tests.
+Migration consistency checks, static collection, dependency checks, compilation,
+and production deployment checks passed. Development and Gunicorn HTTP checks
+served health, Admin login, and Admin CSS, and the production HTTPS redirect
+worked. Production checks used the documented dedicated-domain HSTS options
+and a generated verification secret. No public deployment was performed.
+
+Phase 3 will introduce employee management REST APIs after an explicit instruction
+to continue.
