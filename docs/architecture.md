@@ -143,3 +143,33 @@ another checks `pg_blocking_pids` to prove a waiting revision is blocked by the
 first transaction, then verifies it rejects a stale date after the first commits.
 The rollback test forces an error after a real insert and verifies no new history
 remains. These checks do not simulate row locks with mocks or use SQLite.
+
+## Phase 5: Country compensation analytics
+
+The three GET endpoints reuse existing session/staff permissions. Their required
+country filter is validated before database access. `compensation/analytics.py`
+defines a shared current-salary queryset and five fixed salary bands per country;
+the views and response serializers live in dedicated analytics modules within
+the existing compensation app. No business models or runtime services were added.
+
+The queryset selects one SalaryRecord per employee via a correlated latest-ID
+subquery, with effective date no later than today. The outer query restricts
+active employees, selected country, and its mapped currency. Currency filtering
+is intentionally outside the latest-record subquery: a malformed latest currency
+cannot cause fallback to a superseded salary. Missing effective salaries are
+excluded from both headcount and monetary aggregates.
+
+Overview uses Count/Avg/Sum/Min/Max in one query. Departments use database grouping,
+and distribution uses five filtered Counts in a single aggregation query. Python
+only formats the fixed five-band metadata and aggregate response. It never loads
+all employee salaries for summation or bucketing. Default model ordering is
+cleared before grouping; department results explicitly order by department name.
+The existing employee/effective-date unique index supports latest-record lookup.
+
+Each endpoint executes one data query, excluding authentication. Read-only tests
+verify that count and the SQL aggregation, as well as current-salary selection,
+country isolation, empty datasets, exact band boundaries, large totals, and
+decimal half-up output rounding. Aggregates retain database decimal precision;
+serializers round only the response to two decimal places. Empty sums are zero;
+empty average/minimum/maximum remain null. Response totals allow 24 digits to
+accommodate compensation across 10,000 employees. No migrations are required.

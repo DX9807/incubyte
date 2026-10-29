@@ -1,4 +1,4 @@
-# Employee and Salary Management APIs — Phases 3–4
+# Employee, Salary and Analytics APIs — Phases 3–5
 
 Business endpoints require an active Django staff session. Sign in at `/admin/`
 using the same hostname as the API. Anonymous and non-staff requests return 403.
@@ -18,6 +18,9 @@ The plain Django health view is separate from the generated DRF schema.
 | PATCH | `/api/employees/{id}/` | Update profile fields or active status. |
 | GET | `/api/employees/{id}/salaries/` | Read salary history, newest effective date first. |
 | POST | `/api/employees/{id}/salaries/` | Append a dated salary revision. |
+| GET | `/api/analytics/overview/?country=IN` | Country compensation summary. |
+| GET | `/api/analytics/departments/?country=IN` | Compensation grouped by department. |
+| GET | `/api/analytics/distribution/?country=IN` | Employee counts in fixed salary bands. |
 
 Employee DELETE and PUT are unsupported. Department writes remain in Admin.
 Salary records cannot be edited or deleted through the API.
@@ -181,3 +184,89 @@ do not share the same employee lock.
 PUT, PATCH, and DELETE on the salary collection return 405. No per-record mutation
 URLs are exposed. Admin history remains read-only and employee PATCH cannot alter
 salary. The service adds no analytics or payroll behavior.
+
+## Salary analytics — Phase 5
+
+All three GET-only endpoints require an active staff session and exactly one
+`country` query parameter: `IN`, `US`, `GB`, `DE`, or `SG`. Missing, empty,
+unsupported, comma-separated, or repeated country parameters return a field-keyed
+400 error. Country selects currency from the existing mapping; there is no
+currency conversion or combined-country monetary summary.
+
+Reports select the latest record effective on or before today (UTC) for each
+active employee in the selected country. Future records and old history do not
+contribute. `employee_count` means employees with an eligible current salary,
+so it agrees with department/distribution counts. Employees staged directly in
+ORM without an effective salary are excluded. A latest salary in a currency that
+does not match the employee country is excluded entirely; reports never fall
+back to an older salary merely to find a matching currency. API/Admin validation
+already prevents creating such mismatches through supported workflows.
+
+Aggregates are calculated in PostgreSQL. Money is returned as decimal strings
+with two decimal places, using half-up rounding for presentation; no intermediate
+amounts are rounded. Each endpoint executes one aggregation query, excluding
+session/authentication queries. No employee dataset is aggregated in Python.
+
+### Overview
+
+GET `/api/analytics/overview/?country=IN`:
+
+```json
+{
+  "employee_count": 3,
+  "currency": "INR",
+  "average_annual_salary": "1666666.67",
+  "total_annual_salary": "5000000.00",
+  "min_annual_salary": "600000.00",
+  "max_annual_salary": "3000000.00"
+}
+```
+
+Example figures only. An empty result returns count 0, total `"0.00"`, and null
+average/minimum/maximum, while retaining the selected country's currency.
+The total supports more digits than an individual salary.
+
+### Department compensation
+
+GET `/api/analytics/departments/?country=IN`:
+
+```json
+{
+  "currency": "INR",
+  "departments": [{
+    "department_id": 1,
+    "department_name": "Engineering",
+    "employee_count": 2,
+    "average_annual_salary": "1000000.00",
+    "total_annual_salary": "2000000.00"
+  }]
+}
+```
+
+Rows are ordered alphabetically by department name. Departments without eligible
+employees are omitted; an empty dataset returns `"departments": []`.
+
+### Salary distribution
+
+GET `/api/analytics/distribution/?country=IN` returns a currency and five `bands`.
+Each band contains a label, inclusive `min_annual_salary`, exclusive
+`max_annual_salary`, and `employee_count`. The final maximum is null (unbounded).
+Bounds are decimal strings with two decimal places. Zero-count bands remain
+present, including when the entire country has no eligible salaries.
+
+These are deliberate, fixed MVP thresholds, configured in
+`compensation/analytics.py`; there is no configurable report builder:
+
+| Country | Currency | Four boundaries defining five bands |
+| --- | --- | --- |
+| IN | INR | 500,000; 1,000,000; 2,000,000; 4,000,000 |
+| US | USD | 50,000; 100,000; 150,000; 200,000 |
+| GB | GBP | 30,000; 60,000; 90,000; 120,000 |
+| DE | EUR | 40,000; 70,000; 100,000; 130,000 |
+| SG | SGD | 50,000; 100,000; 150,000; 200,000 |
+
+The first band begins at 0; subsequent bands begin at each boundary. For example,
+the first INR label is `<500,000`, the next is `500,000 to <1,000,000`, and the
+last is `4,000,000+`. Each eligible employee is counted in exactly one band.
+Reports reflect salary revisions and deactivation immediately on the next GET.
+POST, PUT, PATCH, and DELETE return 405; analytics do not mutate records.

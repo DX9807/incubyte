@@ -1,11 +1,11 @@
 # ACME Salary Management
 
 Salary management for ACME's HR team, built incrementally from the supplied
-assessment. **Implemented: Phases 1–4.** Django Admin and staff-only REST APIs
+assessment. **Implemented: Phases 1–5.** Django Admin and staff-only REST APIs
 manage employees with salary revisions and history. Admin history stays read-only. See
 [requirements](docs/requirements.md), [database design](docs/architecture.md), and
 [API documentation](docs/api.md), and [AI usage](docs/ai-usage.md).
-Analytics and React are not implemented yet.
+Country-specific salary analytics are available. React is not implemented yet.
 
 ## Local setup
 
@@ -76,6 +76,12 @@ the same URL with `annual_salary` and `effective_from` appends a revision.
 The date must be later than the latest salary and no later than today; an
 employee created today cannot receive another salary on the same day.
 See [salary API details](docs/api.md#salary-history-and-revisions--phase-4).
+
+Staff can read `/api/analytics/overview/?country=IN`,
+`/api/analytics/departments/?country=IN`, and
+`/api/analytics/distribution/?country=IN`. Each requires one supported country
+and summarizes active employees with current salaries in that country's currency.
+See [analytics contracts and fixed salary bands](docs/api.md#salary-analytics--phase-5).
 
 ```bash
 curl --fail http://127.0.0.1:8000/api/health/
@@ -211,5 +217,23 @@ salary requests returned 403, and production HTTPS redirection worked. Productio
 checks used the documented HSTS options and a generated verification secret.
 No public deployment was performed.
 
-Phase 5 will introduce salary analytics APIs after an explicit instruction
-to continue.
+Phase 5 adds overview, department, and salary distribution APIs using PostgreSQL
+aggregations over current effective salaries. Country is required, inactive
+employees are excluded, and currencies are kept separate. Empty summaries and
+fixed country-specific salary bands are documented in `docs/api.md`. No models,
+migrations, dependencies, or later-phase functionality were added. Changes remain
+uncommitted as instructed.
+
+Phase 5 verification: all 98 tests passed (78 existing and 20 new), including
+the salary concurrency tests. Each analytics endpoint uses one database
+aggregation query in the query-count tests. Migrations ran with nothing pending;
+no model changes were detected. Static collection, strict OpenAPI validation,
+dependency/compilation checks, and production deployment checks passed.
+Development and Gunicorn HTTP checks verified health, Admin, static assets,
+public documentation, required-country schema parameters, and anonymous 403
+responses for analytics. HTTPS redirection worked. Production checks used the
+documented HSTS options and a generated verification secret. No public deployment
+was performed.
+
+Phase 6 will introduce the deterministic employee seed command after an explicit
+instruction to continue.

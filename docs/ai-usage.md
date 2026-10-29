@@ -46,3 +46,17 @@ changes, or frontend were added.
 Final Phase 4 verification passed all 78 tests, migration consistency checks,
 static collection, OpenAPI validation, production settings checks, and
 development/Gunicorn HTTP smoke checks. Changes remain uncommitted.
+
+Phase 5 was explicitly limited to salary analytics, with no auto commit. Codex
+inspected the clean repository and verified all 78 existing tests before coding.
+The three reports use PostgreSQL aggregations, the existing country mapping,
+and a shared latest-effective-salary query. Fixed country bands and empty-result
+semantics are documented as MVP decisions. Added deterministic tests cover
+financial calculations, country/currency isolation, history and revision behavior,
+inactive employees, boundary amounts, rounding, permissions, and query counts.
+No new model, migration, dependency, seed command, or frontend was introduced.
+
+Final Phase 5 verification passed all 98 tests, including 20 analytics tests and
+the existing PostgreSQL concurrency tests. Migration consistency, static files,
+OpenAPI validation, production settings, development/Gunicorn HTTP checks, and
+dependency/compilation checks passed. No Git staging or commit was performed.
