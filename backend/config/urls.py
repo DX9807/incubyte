@@ -20,6 +20,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 from .views import health
+from .auth_views import CsrfTokenView, LoginView, LogoutView, MeView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +28,10 @@ urlpatterns = [
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     path('api/health/', health, name='health'),
+    path('api/csrf/', CsrfTokenView.as_view(), name='csrf-token'),
+    path('api/login/', LoginView.as_view(), name='login'),
+    path('api/logout/', LogoutView.as_view(), name='logout'),
+    path('api/me/', MeView.as_view(), name='me'),
     path('api/', include('employees.urls')),
     path('api/', include('compensation.urls')),
 ]

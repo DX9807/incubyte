@@ -143,8 +143,14 @@ STORAGES = {
 }
 
 SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 8 * 60 * 60
 CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SAMESITE = 'Lax'
 SECURE_SSL_REDIRECT = not DEBUG
+# Hosting readiness probes must execute the database check rather than stop at a redirect.
+SECURE_REDIRECT_EXEMPT = [r'^api/health/$']
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get(
     'DJANGO_HSTS_INCLUDE_SUBDOMAINS', 'false'
@@ -172,6 +178,28 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
     'SERVE_AUTHENTICATION': [],
+    # Swagger's default interceptor embeds a page-load token. Read the live
+    # cookie instead, since Django rotates it at login, and avoid duplicate
+    # case variants of the same HTTP header.
+    'SWAGGER_UI_SETTINGS': r'''{
+        deepLinking: true,
+        requestInterceptor: (request) => {
+            if (new URL(request.url, window.location.href).origin !== window.location.origin) {
+                return request;
+            }
+            request.credentials = "same-origin";
+            if (!["GET", "HEAD", "OPTIONS"].includes((request.method || "GET").toUpperCase())) {
+                request.headers = request.headers || {};
+                Object.keys(request.headers).forEach((name) => {
+                    if (name.toLowerCase() === "x-csrftoken") delete request.headers[name];
+                });
+                const cookie = document.cookie.split(";").map((value) => value.trim())
+                    .find((value) => value.startsWith("csrftoken="));
+                if (cookie) request.headers["X-CSRFToken"] = decodeURIComponent(cookie.slice(10));
+            }
+            return request;
+        }
+    }''',
 }
 
 # Default primary key field type

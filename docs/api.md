@@ -1,9 +1,9 @@
-# Employee, Salary and Analytics APIs — Phases 3–5
+# ACME backend APIs — Phases 3–7
 
-Business endpoints require an active Django staff session. Sign in at `/admin/`
-using the same hostname as the API. Anonymous and non-staff requests return 403.
+Business endpoints require an active Django staff session. Sign in via `/api/login/`
+or `/admin/` using the same hostname as the API. Anonymous and non-staff requests return 403.
 POST and PATCH require the session's CSRF token in `X-CSRFToken`.
-Dedicated login/logout endpoints belong to Phase 7.
+Session authentication and CSRF protection apply to all business writes.
 
 Documentation remains public: `/api/schema/`, `/api/docs/` (Swagger UI), and
 `/api/redoc/`. Public documentation does not grant access to business data.
@@ -11,6 +11,10 @@ The plain Django health view is separate from the generated DRF schema.
 
 | Method | URL | Behavior |
 | --- | --- | --- |
+| GET | `/api/csrf/` | Anonymous CSRF bootstrap: token JSON plus cookie. |
+| POST | `/api/login/` | Validate staff credentials and establish a session; CSRF required. |
+| POST | `/api/logout/` | Clear the authenticated session; CSRF required. |
+| GET | `/api/me/` | Return the signed-in staff account's safe identity. |
 | GET | `/api/departments/` | Alphabetical array of `{id, name}` objects. |
 | GET | `/api/employees/` | Searchable, filtered, paginated employee list. |
 | POST | `/api/employees/` | Atomically create an employee and initial salary. |
@@ -24,6 +28,50 @@ The plain Django health view is separate from the generated DRF schema.
 
 Employee DELETE and PUT are unsupported. Department writes remain in Admin.
 Salary records cannot be edited or deleted through the API.
+
+## Authentication — Phase 7
+
+GET `/api/csrf/` returns `{"csrfToken": "..."}` and sets a CSRF cookie. Keep that
+cookie and send the token in `X-CSRFToken` when posting credentials:
+
+```json
+{"username": "hr-demo", "password": "<password supplied by the user>"}
+```
+
+POST `/api/login/` requires CSRF even before a session exists. Success returns
+HTTP 200, sets an HttpOnly session cookie, and rotates the CSRF token:
+
+```json
+{
+  "user": {"id": 1, "username": "hr-demo", "email": "hr-demo@example.com", "is_staff": true},
+  "csrfToken": "<new token>"
+}
+```
+
+Use the new token on subsequent unsafe requests; the old token is no longer
+valid. GET `/api/me/` returns the `user` object above directly. POST `/api/logout/`
+requires the current token and returns 204 with an empty body, deleting the server
+session. Subsequent staff/business requests return 403. A valid non-staff session
+can log out but cannot access `/api/me/` or business endpoints.
+
+Invalid credentials, inactive accounts, and non-staff logins share a generic 403
+error; invalid/missing fields return 400. Missing/invalid CSRF returns 403. The
+Django login CSRF guard can return an HTML error page; clients should inspect
+status before assuming JSON. Other auth errors are DRF JSON. Auth responses are
+not cacheable. Unsupported methods return 405 for authorized requests. No
+registration, password-reset API, or role management API is exposed.
+
+Browser clients use same-origin requests and retain cookies (`fetch` supports
+`credentials: 'same-origin'`). Keep the latest token from bootstrap/login and send
+it as a header on writes. Expired sessions require a fresh login. No CORS or
+frontend application is required for these backend endpoints. Provision an
+account using the [backend release runbook](backend-release.md).
+
+Swagger UI at `/api/docs/` automatically reads the current `csrftoken` cookie for
+same-origin writes and sends a single `X-CSRFToken` header. No manual CSRF header
+field is needed there. It reads the cookie again after login rotates the token.
+Refresh the docs page after updating this configuration. Other API clients still
+follow the explicit cookie/token flow above.
 
 ## List
 

@@ -1,11 +1,13 @@
 # ACME Salary Management
 
 Salary management for ACME's HR team, built incrementally from the supplied
-assessment. **Implemented: Phases 1–6.** Django Admin and staff-only REST APIs
+assessment. **Implemented: Phases 1–7; backend complete.** Django Admin and staff-only REST APIs
 manage employees with salary revisions and history. Admin history stays read-only. See
 [requirements](docs/requirements.md), [database design](docs/architecture.md), and
 [API documentation](docs/api.md), and [AI usage](docs/ai-usage.md).
 Country-specific salary analytics are available. React is not implemented yet.
+Session login/logout, current-user identity, and CSRF bootstrap are available.
+See the [backend release runbook](docs/backend-release.md) for provisioning and deployment.
 
 The deterministic `seed_employees` command can populate 10,000 fictional employees
 with current salaries and history. See [seed behavior and verification](docs/seed-data.md).
@@ -56,6 +58,7 @@ account, use that installation's admin login method for provisioning instead.
 python backend/manage.py migrate
 python backend/manage.py collectstatic --noinput
 python backend/manage.py createsuperuser
+python backend/manage.py create_hr_user --username hr-demo --email hr-demo@example.com
 python backend/manage.py test config employees compensation
 python backend/manage.py runserver 127.0.0.1:8000
 ```
@@ -73,6 +76,12 @@ detail, profile PATCH, search, filters, and 50-record server-side pages.
 See [request/response contracts](docs/api.md). OpenAPI schema and UI routes are
 public at `/api/schema/`, `/api/docs/`, and `/api/redoc/`; business data remains
 staff-only. Unsafe session requests require CSRF protection.
+
+API clients can GET `/api/csrf/`, POST `/api/login/` with credentials and the
+token, GET `/api/me/`, then POST `/api/logout/` with the new token returned at
+login. Login itself requires CSRF protection even for anonymous requests.
+The HR provisioning command prompts securely and creates a non-superuser staff
+account for APIs; use the administrator account for Admin model management.
 
 GET `/api/employees/{id}/salaries/` shows salary history, newest first. POST to
 the same URL with `annual_salary` and `effective_from` appends a revision.
@@ -144,8 +153,8 @@ Never use the local development `.env` in production. Production defaults enforc
 HTTPS redirects, secure session/CSRF cookies, and HSTS for one year.
 Set `DJANGO_TRUST_PROXY=true` only when the hosting provider's trusted proxy strips
 incoming `X-Forwarded-Proto` and sets it itself. Otherwise terminate TLS directly
-with a correctly configured reverse proxy. Configure a proxy deployment's health
-probe to send `X-Forwarded-Proto: https` or probe via HTTPS.
+with a correctly configured reverse proxy. Hosting health probes may use HTTP
+for `/api/health/`; other production routes require HTTPS.
 
 Release/build checks (with production environment variables loaded):
 
@@ -160,13 +169,17 @@ python backend/manage.py makemigrations --check --dry-run
 Start command (set `PORT` to the provider's assigned port):
 
 ```bash
-gunicorn --chdir backend config.wsgi:application --bind "0.0.0.0:${PORT:-8000}" --access-logfile -
+gunicorn --config gunicorn.conf.py config.wsgi:application
 ```
 
-WhiteNoise serves collected Admin assets; no frontend build is required yet.
+Gunicorn reads `PORT` and `WEB_CONCURRENCY` from process environment variables
+(defaults 8000 and 2). Export local overrides before starting it. WhiteNoise
+serves collected Admin assets; no frontend build is required yet.
 Provision the Admin account interactively using `createsuperuser` in a secure
 release shell. Verify the actual HTTPS health URL, Admin login and static assets
-after deployment. No public deployment is created in Phase 1.
+after deployment. `/api/health/` bypasses HTTPS redirection for hosting readiness
+probes; all other HTTP routes still redirect in production. See the
+[release runbook](docs/backend-release.md) for the complete deployment procedure.
 
 ## Verification and next step
 
@@ -266,5 +279,20 @@ employees and 12,500 salary records. A second run created nothing and skipped
 all 10,000 employees. Pagination and all country analytics were verified against
 that persisted dataset. No public deployment or Git staging/commit was performed.
 
-Phase 7 will add the remaining authentication endpoints and backend deployment
-hardening after an explicit instruction to continue. No frontend is implemented.
+Phase 7 adds session login/logout, safe current-user identity, CSRF bootstrap,
+secure cookie/session configuration, non-superuser HR provisioning, a reusable
+Gunicorn configuration, and backend release instructions. No business models,
+migrations, dependencies, or frontend were added. No staging or commit is performed.
+
+Phase 7 verification: all 135 tests passed (111 existing and 24 new). Migrations
+had nothing pending, and no model changes were detected. Static files, strict
+OpenAPI validation, dependency/compilation checks, Gunicorn config validation,
+and production deployment checks passed. Real HTTP auth/CSRF and business
+read/write flows passed on the development server and production-configured
+Gunicorn behind a simulated trusted HTTPS proxy, including logout invalidation,
+readiness, docs/static assets, and HTTPS redirection. Temporary fixtures were
+removed; 10,000 seeded employees and 12,500 salaries were preserved.
+Public deployment remains pending hosting credentials and a target service.
+
+The backend implementation is complete. Phase 8 (React setup and authentication
+UI) requires an explicit instruction to proceed; no frontend is implemented.

@@ -198,3 +198,33 @@ repeatability, and API compatibility. Database constraints remain active. Seeded
 data is fictional; no employee data is fetched externally. Detailed behavior and
 the distinction between business reproducibility and timestamps/IDs are documented
 in `docs/seed-data.md`. Existing models, migrations, and API contracts are unchanged.
+
+## Phase 7: Sessions and backend release
+
+The built-in User model and database session engine are retained. Public
+`/api/csrf/` bootstraps anonymous CSRF cookies/tokens. Login uses Django
+authenticate/login and an explicit `csrf_protect` dispatch decorator: DRF's
+normal SessionAuthentication alone does not check anonymous login CSRF. Successful
+login rotates session and CSRF keys and returns only safe identity plus the fresh
+token. Staff/active checks precede login. Login failures do not disclose which
+credential or account policy failed. Auth responses are never cached.
+
+Business APIs and `/api/me/` retain staff-only authorization. Logout permits an
+authenticated user to clear its own session and uses normal session CSRF checks.
+Session cookies are HttpOnly/SameSite=Lax with an eight-hour lifetime; production
+session and CSRF cookies are Secure. Explicit tests exercise origin checks,
+anonymous login CSRF, key rotation, real session access, permission revocation,
+cookie attributes, and server-session invalidation.
+
+The interactive `create_hr_user` command uses Django field/password validation,
+password hashing, and an atomic insert. It creates staff without superuser or
+Admin model-management privileges and never changes an existing account. Passwords
+are not command-line arguments or logged output.
+
+Root `gunicorn.conf.py` supplies backend working directory, environment-driven
+port/worker count, timeout, and console logging. Existing WhiteNoise/manifest
+storage remains intact and independent of React. Only public database readiness
+is exempt from HTTPS redirects so hosting probes receive genuine readiness
+status. No business route is exempt. Deployment uses one application plus
+PostgreSQL; `docs/backend-release.md` records exact release/provisioning commands.
+No model migration, extra service, authentication dependency, or frontend is added.

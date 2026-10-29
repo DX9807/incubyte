@@ -81,3 +81,36 @@ the checks executed successfully. The local database was populated with 10,000
 employees and 12,500 salaries; an immediate rerun created nothing. Pagination
 and all country analytics were exercised against the persisted data. No public
 deployment, staging, or commit was performed.
+
+Phase 7 was limited to backend authentication/release. Codex inspected the clean
+repository and verified all 111 existing tests before edits. Existing session,
+staff, CSRF, PostgreSQL, and static configuration was retained. Added login/logout,
+identity, a small anonymous CSRF bootstrap, secure HR-user provisioning, and a
+Gunicorn release config. Login CSRF was tested explicitly, including anonymous
+requests and token rotation. Official Django and Render documentation and local
+framework source informed the implementation and release runbook. Provider
+credential names were checked without exposing their values; no hosting access
+or target service was configured, so no public deployment was attempted.
+The user's standing no-auto-commit instruction remains in force. No frontend,
+new business models, migrations, or dependencies were introduced.
+
+Final Phase 7 verification passed all 135 tests, static/schema/migration checks,
+production settings checks, and Gunicorn config validation. Real HTTP flows were
+verified on the development server and production-configured Gunicorn with a
+simulated trusted HTTPS proxy. The first HTTP run used an incorrect JSON Accept
+header for HTML documentation; the verification client was corrected and HTTP
+checks rerun successfully without repeating the already-passing full suite.
+Temporary HR accounts, employees, salary rows, and sessions were cleaned up;
+the 10,000-employee/12,500-salary seeded dataset remained intact. Backend work
+stopped before Phase 8; hosting access remains the public-deployment blocker.
+
+A login follow-up exposed a Swagger integration defect: the generated manual
+X-CSRFToken parameter could coexist with the UI's automatic X-CSRFTOKEN header,
+which browsers combine into an invalid-length value. Codex removed those manual
+parameter fields and configured a same-origin interceptor that normalizes header
+names and reads the current CSRF cookie on each write. The rendered Swagger JS
+was executed in Node with browser-compatible Headers to reproduce the 130-character
+combined value and verify the fix, rotation handling, and cross-origin isolation.
+All 26 authentication/provisioning tests passed, including two new Swagger
+regressions; schema validation passed. Backend CSRF enforcement stayed enabled.
+No Git staging or commit was performed.
