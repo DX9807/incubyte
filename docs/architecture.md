@@ -91,3 +91,24 @@ The initial migrations create only new business tables, leaving Phase 1 endpoint
 auth tables, and environment configuration intact. Apply with `migrate` and check
 for pending migration changes before release. No REST endpoints, seed command,
 analytics, or frontend were added in this phase.
+
+## Phase 3: Employee APIs
+
+The existing schema and Admin remain unchanged. `employees/serializers.py`
+validates employee input; its create method inserts the employee and initial
+SalaryRecord in one atomic transaction. Initial salary date is today, and currency
+comes from the shared country mapping. The profile serializer exposes country
+and annual salary as read-only. No revision or history endpoints are added.
+
+`employees/views.py` uses DRF's generic list/viewset mixins, existing staff-only
+session authentication, and CSRF protection. Department listing is an unpaginated
+alphabetical lookup; employee listing has fixed 50-record server-side pages.
+Validated department/country/status filters combine with DRF search. Employee
+queries join the department and use two correlated scalar subqueries for the
+latest effective salary amount and currency. A page requires one count and one
+data query, independent of page length, excluding session/authentication queries.
+The existing employee/date unique index supports salary lookups.
+
+The API contract is documented in `docs/api.md` and generated OpenAPI documentation.
+Documentation stays public at the user's request; business data stays staff-only.
+Migrations are unchanged because this phase adds only API behavior.

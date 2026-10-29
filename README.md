@@ -1,10 +1,11 @@
 # ACME Salary Management
 
 Salary management for ACME's HR team, built incrementally from the supplied
-assessment. **Implemented: Phases 1–2.** The Django Admin manages departments and
-employees with initial salaries and read-only history. See
+assessment. **Implemented: Phases 1–3.** Django Admin and staff-only REST APIs
+manage employees with initial salaries. Admin displays read-only history. See
 [requirements](docs/requirements.md), [database design](docs/architecture.md), and
-[AI usage](docs/ai-usage.md). Business REST APIs and React are not implemented yet.
+[API documentation](docs/api.md), and [AI usage](docs/ai-usage.md).
+Salary revision APIs, analytics, and React are not implemented yet.
 
 ## Local setup
 
@@ -61,7 +62,14 @@ Create a department, then add an employee with the required initial salary inlin
 Currency derives from country. Employee profile editing and deactivation are
 available; country is read-only after creation. Salary history can be viewed in
 the employee page and Salary records list. Existing history cannot be changed or
-deleted, and salary revisions are not exposed in Phase 2.
+deleted. Salary revisions are not exposed yet.
+
+After signing into Admin, use `/api/employees/` to browse the employee API and
+`/api/departments/` to list departments. The APIs support employee creation,
+detail, profile PATCH, search, filters, and 50-record server-side pages.
+See [request/response contracts](docs/api.md). OpenAPI schema and UI routes are
+public at `/api/schema/`, `/api/docs/`, and `/api/redoc/`; business data remains
+staff-only. Unsafe session requests require CSRF protection.
 
 ```bash
 curl --fail http://127.0.0.1:8000/api/health/
@@ -71,7 +79,7 @@ Expected: HTTP 200 and `{"status": "ok"}`. The public GET-only endpoint executes
 `SELECT 1`; database errors return HTTP 503 and `{"status": "unavailable"}`.
 It does not certify that migrations are applied; migration checks are a separate
 release step. Static collection is needed before tests that render Admin with
-manifest storage. Test data is created in a separate `test_acme_salary` database.
+manifest storage. Test data is created in a separate `test_<PGDATABASE>` database.
 
 ## Production deployment
 
@@ -166,5 +174,20 @@ served health, Admin login, and Admin CSS, and the production HTTPS redirect
 worked. Production checks used the documented dedicated-domain HSTS options
 and a generated verification secret. No public deployment was performed.
 
-Phase 3 will introduce employee management REST APIs after an explicit instruction
-to continue.
+Phase 3 adds employee and department REST APIs with deterministic tests for
+atomic creation, salary validation, search, filters, pagination, profile changes,
+deactivation, access control, CSRF, and bounded list-query counts. No schema or
+dependency changes are required. All work is left uncommitted at the user's
+request.
+
+Phase 3 verification: all 60 tests passed (33 existing and 27 new). Migrations
+ran with nothing pending, and no model changes were detected. Static collection,
+OpenAPI validation with warnings treated as errors, dependency/compilation checks,
+and production deployment checks passed. Development and Gunicorn HTTP checks
+served health, Admin login, static CSS, and public documentation; anonymous
+business API requests returned 403. The production HTTPS redirect worked. The
+production checks used the documented HSTS options and a generated verification
+secret. No public deployment was performed.
+
+Phase 4 will introduce salary revision and history APIs after an explicit
+instruction to continue.
