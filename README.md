@@ -1,11 +1,11 @@
 # ACME Salary Management
 
 Salary management for ACME's HR team, built incrementally from the supplied
-assessment. **Implemented: Phases 1–3.** Django Admin and staff-only REST APIs
-manage employees with initial salaries. Admin displays read-only history. See
+assessment. **Implemented: Phases 1–4.** Django Admin and staff-only REST APIs
+manage employees with salary revisions and history. Admin history stays read-only. See
 [requirements](docs/requirements.md), [database design](docs/architecture.md), and
 [API documentation](docs/api.md), and [AI usage](docs/ai-usage.md).
-Salary revision APIs, analytics, and React are not implemented yet.
+Analytics and React are not implemented yet.
 
 ## Local setup
 
@@ -62,7 +62,7 @@ Create a department, then add an employee with the required initial salary inlin
 Currency derives from country. Employee profile editing and deactivation are
 available; country is read-only after creation. Salary history can be viewed in
 the employee page and Salary records list. Existing history cannot be changed or
-deleted. Salary revisions are not exposed yet.
+deleted. Staff can append dated revisions through the salary API.
 
 After signing into Admin, use `/api/employees/` to browse the employee API and
 `/api/departments/` to list departments. The APIs support employee creation,
@@ -70,6 +70,12 @@ detail, profile PATCH, search, filters, and 50-record server-side pages.
 See [request/response contracts](docs/api.md). OpenAPI schema and UI routes are
 public at `/api/schema/`, `/api/docs/`, and `/api/redoc/`; business data remains
 staff-only. Unsafe session requests require CSRF protection.
+
+GET `/api/employees/{id}/salaries/` shows salary history, newest first. POST to
+the same URL with `annual_salary` and `effective_from` appends a revision.
+The date must be later than the latest salary and no later than today; an
+employee created today cannot receive another salary on the same day.
+See [salary API details](docs/api.md#salary-history-and-revisions--phase-4).
 
 ```bash
 curl --fail http://127.0.0.1:8000/api/health/
@@ -189,5 +195,21 @@ business API requests returned 403. The production HTTPS redirect worked. The
 production checks used the documented HSTS options and a generated verification
 secret. No public deployment was performed.
 
-Phase 4 will introduce salary revision and history APIs after an explicit
-instruction to continue.
+Phase 4 adds salary history and revision APIs, an atomic revision service with
+employee row locking, and service/API/PostgreSQL concurrency tests. No models,
+migrations, or dependencies changed. Revisions append records; existing Admin
+and profile endpoints cannot edit or delete history. No Git commit is created
+by the agent, as instructed.
+
+Phase 4 verification: all 78 tests passed (60 existing and 18 new), including
+two real PostgreSQL concurrency tests. Migrations ran with nothing pending and
+no model changes were detected. Static collection, strict OpenAPI validation,
+dependency/compilation checks, and production deployment checks passed.
+Development and Gunicorn HTTP checks served health, Admin login, CSS, and public
+documentation, including the new salary operations in the schema. Anonymous
+salary requests returned 403, and production HTTPS redirection worked. Production
+checks used the documented HSTS options and a generated verification secret.
+No public deployment was performed.
+
+Phase 5 will introduce salary analytics APIs after an explicit instruction
+to continue.

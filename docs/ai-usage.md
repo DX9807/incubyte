@@ -32,3 +32,17 @@ Tests exercise
 real database constraints/transactions and session CSRF handling, and measure
 page query counts. No business models, migrations, dependencies, salary revision
 endpoints, or frontend were introduced.
+
+Phase 4 was authorized only for salary revision/history APIs, with no agent Git
+commit. Codex inspected the clean repository and reran all 60 existing tests
+before adding the revision service, serializers, views, routes, and focused tests.
+The implementation reuses model validation and preserves the existing schema,
+Admin restrictions, employee endpoints, and public documentation. Tests use real
+PostgreSQL transactions and independent connections to verify row locking and
+revalidation after concurrent commits, plus API validation, history preservation,
+and rollback after an inserted record. No analytics, new dependencies, model
+changes, or frontend were added.
+
+Final Phase 4 verification passed all 78 tests, migration consistency checks,
+static collection, OpenAPI validation, production settings checks, and
+development/Gunicorn HTTP smoke checks. Changes remain uncommitted.

@@ -1,4 +1,4 @@
-# Employee Management API — Phase 3
+# Employee and Salary Management APIs — Phases 3–4
 
 Business endpoints require an active Django staff session. Sign in at `/admin/`
 using the same hostname as the API. Anonymous and non-staff requests return 403.
@@ -16,9 +16,11 @@ The plain Django health view is separate from the generated DRF schema.
 | POST | `/api/employees/` | Atomically create an employee and initial salary. |
 | GET | `/api/employees/{id}/` | Profile with current annual salary and currency. |
 | PATCH | `/api/employees/{id}/` | Update profile fields or active status. |
+| GET | `/api/employees/{id}/salaries/` | Read salary history, newest effective date first. |
+| POST | `/api/employees/{id}/salaries/` | Append a dated salary revision. |
 
 Employee DELETE and PUT are unsupported. Department writes remain in Admin.
-Salary revision/history endpoints are not implemented in Phase 3.
+Salary records cannot be edited or deleted through the API.
 
 ## List
 
@@ -119,3 +121,63 @@ python backend/manage.py spectacular --validate --fail-on-warn --file /tmp/acme-
 
 After signing into Admin, use DRF's browsable `/api/employees/` page or a client
 with the same session and CSRF token to exercise creation and PATCH.
+
+## Salary history and revisions — Phase 4
+
+GET `/api/employees/{id}/salaries/` returns an unpaginated array for that employee,
+ordered by effective date descending. Each object contains `id`, `employee`
+(employee ID), `annual_salary` (decimal string), `currency`, `effective_from`, and
+`created_at`. Inactive employees retain their history. Missing employees return
+404; an existing employee with no salary records returns an empty array.
+
+POST to the same URL with JSON:
+
+```json
+{
+  "annual_salary": "1450000.00",
+  "effective_from": "2026-10-28"
+}
+```
+
+The date above is an example and must be later than the employee's latest salary
+date and no later than today (UTC). Both fields are required. The amount must be
+positive, with at most two decimal places and the same maximum as initial salary.
+Salary decreases are allowed. Duplicate dates, backdated corrections, and future
+dates are rejected. An employee created today cannot be revised again today.
+
+Currency derives from the employee's country. Clients cannot supply employee ID,
+currency, record ID, or creation timestamp in the body; unknown fields return
+400. Employee ID comes from the URL. Revisions are also permitted for inactive
+employees; active status is unchanged. An employee staged through ORM without
+an initial salary cannot be revised: POST returns a `non_field_errors` 400 error.
+Create employees and their initial salary through the employee API or Admin.
+
+Success returns HTTP 201 and the new record:
+
+```json
+{
+  "id": 2,
+  "employee": 1,
+  "annual_salary": "1450000.00",
+  "currency": "INR",
+  "effective_from": "2026-10-28",
+  "created_at": "2026-10-29T10:00:00Z"
+}
+```
+
+Existing rows remain unchanged. Employee list/detail responses immediately derive
+the revised current salary from history. Validation errors return HTTP 400 with
+field-keyed messages, such as `effective_from` for an out-of-order date. GET/POST
+require a staff session; POST also requires CSRF protection. DRF's browsable API
+form is available after signing into Admin.
+
+The revision service holds an employee row lock until the transaction commits.
+Concurrent requests for the same employee serialize and validate against the
+latest committed record. For duplicate effective dates, one succeeds and one
+returns a validation error. For distinct dates, both succeed only if their commit
+order respects the strictly increasing date rule. Requests for different employees
+do not share the same employee lock.
+
+PUT, PATCH, and DELETE on the salary collection return 405. No per-record mutation
+URLs are exposed. Admin history remains read-only and employee PATCH cannot alter
+salary. The service adds no analytics or payroll behavior.

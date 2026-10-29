@@ -112,3 +112,34 @@ The existing employee/date unique index supports salary lookups.
 The API contract is documented in `docs/api.md` and generated OpenAPI documentation.
 Documentation stays public at the user's request; business data stays staff-only.
 Migrations are unchanged because this phase adds only API behavior.
+
+## Phase 4: Salary revisions and history
+
+`compensation/services.py` owns the small `revise_salary` operation. Inside
+`transaction.atomic`, it loads and locks the employee with `select_for_update`,
+requires an existing initial salary, derives currency from country, and calls
+the existing SalaryRecord model validation before inserting a new record.
+Model validation reads the latest salary while the employee lock is held, so
+date validation happens after any competing revision commits. The database's
+employee/effective-date uniqueness and positive-amount constraints remain a
+second line of enforcement. No existing salary row is updated.
+
+The lock serializes revision calls per employee, including requests with different
+dates. A waiting request is rejected if its date is no longer later than the
+committed latest salary. A failed validation or write rolls back the transaction.
+Trusted bulk/ORM writers still must enforce their own validation and locking;
+the service does not introduce triggers or change standard Django model behavior.
+
+`compensation/views.py` exposes only history GET and revision POST at the nested
+employee URL. The input serializer accepts amount/date; the output serializer is
+read-only. Existing session/staff/CSRF defaults are preserved. History is an
+unpaginated, newest-first array for one employee, using two queries including
+the parent existence check. Admin mutation restrictions and employee profile
+PATCH restrictions remain unchanged. No schema migration is needed.
+
+TransactionTestCase tests use independent PostgreSQL connections and synchronization
+events. One test verifies same-date revisions create exactly one new record;
+another checks `pg_blocking_pids` to prove a waiting revision is blocked by the
+first transaction, then verifies it rejects a stale date after the first commits.
+The rollback test forces an error after a real insert and verifies no new history
+remains. These checks do not simulate row locks with mocks or use SQLite.
