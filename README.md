@@ -1,7 +1,7 @@
 # ACME Salary Management
 
 Salary management for ACME's HR team, built incrementally from the supplied
-assessment. **Phases 1–11 implemented; Phase 12 verified locally, Azure deployment pending.** The backend is complete; a separate React/Vite
+assessment.The backend is complete; a separate React/Vite
 application provides login, logout, protected navigation, a responsive layout,
 employee listing, creation, editing, details, deactivation, salary history,
 salary revisions, and a country-specific compensation dashboard.
@@ -69,10 +69,10 @@ python backend/manage.py collectstatic --noinput
 python backend/manage.py createsuperuser
 python backend/manage.py create_hr_user --username hr-demo --email hr-demo@example.com
 python backend/manage.py test config employees compensation
-python backend/manage.py runserver 127.0.0.1:8000
+python backend/manage.py runserver 127.0.0.1:9000
 ```
 
-Visit `http://127.0.0.1:8000/admin/` and sign in using the superuser you created.
+Visit `http://127.0.0.1:9000/admin/` and sign in using the superuser you created.
 Create a department, then add an employee with the required initial salary inline.
 Currency derives from country. Employee profile editing and deactivation are
 available; country is read-only after creation. Salary history can be viewed in
@@ -105,7 +105,7 @@ and summarizes active employees with current salaries in that country's currency
 See [analytics contracts and fixed salary bands](docs/api.md#salary-analytics--phase-5).
 
 ```bash
-curl --fail http://127.0.0.1:8000/api/health/
+curl --fail http://127.0.0.1:9000/api/health/
 ```
 
 Expected: HTTP 200 and `{"status": "ok"}`. The public GET-only endpoint executes
