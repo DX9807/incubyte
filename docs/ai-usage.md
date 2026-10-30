@@ -222,3 +222,41 @@ No public deployment, Phase 12 work, Git staging, or commit was performed.
 After the final mobile chart adjustment and clean install, all four dashboard
 browser scenarios passed again on both servers, and the updated screenshot was
 inspected. Temporary fixtures were removed and baseline seed counts preserved.
+
+Phase 12 covered final integration, release preparation and submission artifacts.
+Codex reread the assessment and master prompt, inspected the clean repository and
+16-commit history, and verified the prior phase before edits: 137 backend tests,
+27 client tests, build and 13 browser scenarios on each frontend server passed.
+Inspection found setup/runbook references to root requirements/environment files
+that the repository now stores under backend/; those references were corrected.
+
+The user selected Azure VM hosting. No VM address, SSH username/key choice,
+HTTPS domain, Azure account context or database target was supplied. Existing SSH
+aliases did not identify that target; no unrelated host was contacted. Codex
+prepared an Azure runbook, loopback Gunicorn systemd service and Nginx HTTPS/SPA
+configuration, using official Azure/Django/Nginx/Certbot documentation. No paid
+resource was provisioned and no public deployment or URL verification is claimed.
+
+Added a repeatable fixture-owning browser runner and a browser-only recording
+script, reusing the existing tests and installed Playwright runtime. Final clean
+npm install, all 27 client tests, build, all 137 backend tests, migrations/model
+consistency, static/schema checks, production checks, dependency consistency and
+Gunicorn HTTP checks passed. The runner passed all 13 scenarios on dev and built
+preview, recorded a real silent WebM demo, then cleaned up its accounts, employees,
+salaries, sessions and server processes. Decoded recording frames were inspected.
+
+Actual local Nginx HTTPS → production Gunicorn checks passed SPA deep links,
+hashed assets and missing-asset 404s, docs/Admin assets, CSRF login, secure session
+cookies, all-country analytics, profile create/edit/search/history and logout.
+Nginx and the adapted systemd template passed syntax verification. The first
+systemd parser attempt was sandbox-blocked; the read-only check succeeded after
+native escalation. A temporary certificate was trusted only for local QA.
+
+The persisted seed was rerun twice with zero creations and all 10,000 employees
+skipped. Hash comparisons proved seeded profiles and full salary histories were
+unchanged, preserving 12,501 salary rows including the existing user revision.
+The assessment checklist maps every deliverable to evidence and explicitly marks
+Azure deployment/public URL, video sharing and final sending as pending. The
+standing no-auto-commit rule was preserved; no staging, commit, push, upload or
+assessment email was performed. Local release preparation is complete; public
+deployment and final submission remain dependent on the requested target details.

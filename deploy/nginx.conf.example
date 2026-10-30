@@ -1,0 +1,38 @@
+# Replace salary.example.com and certificate paths before installing on the VM.
+server {
+    listen 80;
+    server_name salary.example.com;
+    return 301 https://salary.example.com$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name salary.example.com;
+    ssl_certificate /etc/letsencrypt/live/salary.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/salary.example.com/privkey.pem;
+    root /opt/acme-salary/frontend/dist;
+    index index.html;
+
+    # Strip the browser's forwarded scheme and set it at the trusted TLS edge.
+    # No trailing URI in proxy_pass: retain the original path and query string.
+    location ~ ^/(api|admin|static)/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_read_timeout 30s;
+    }
+
+    location /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location = /index.html {
+        add_header Cache-Control "no-cache";
+    }
+
+    location / {
+        try_files $uri /index.html;
+    }
+}

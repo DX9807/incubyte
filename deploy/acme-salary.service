@@ -1,0 +1,19 @@
+[Unit]
+Description=ACME Salary Management Django API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=acme
+Group=acme
+WorkingDirectory=/opt/acme-salary
+EnvironmentFile=/etc/acme-salary/backend.env
+ExecStart=/opt/acme-salary/.venv/bin/gunicorn --config /opt/acme-salary/gunicorn.conf.py --bind 127.0.0.1:8000 config.wsgi:application
+Restart=on-failure
+RestartSec=5
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

@@ -103,6 +103,20 @@ not performed in this phase because no frontend/backend hosting targets are conf
 
 ## Browser verification
 
+Phase 12 adds a fixture-owning runner. After the existing migrations, static
+collection, seed and frontend build steps, run from repository root:
+
+```bash
+source .venv/bin/activate
+python scripts/verify_browser.py --record-demo
+```
+
+It runs all 13 scenarios on dev and built preview, records the real preview UI,
+then removes only its random-prefix accounts/employees/salaries/sessions and
+stops its servers. Use a local/demo database. The manual fixture steps below
+remain available when running Playwright directly. See [release verification](../docs/submission.md)
+and [Azure hosting](../docs/azure-vm.md). No frontend source behavior changed in Phase 12.
+
 Install the Chromium test browser once:
 
 ```bash

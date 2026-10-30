@@ -1,5 +1,19 @@
 # Database and Admin — Phase 2
 
+The sections below record incremental decisions. Final deployment topology:
+
+```mermaid
+flowchart LR
+    Browser -->|HTTPS| Nginx[Azure VM: Nginx]
+    Nginx -->|SPA and hashed assets| React[Separate React build]
+    Nginx -->|API / Admin / backend static| Gunicorn[Gunicorn on loopback]
+    Gunicorn --> Django[Django / DRF]
+    Django --> PostgreSQL
+```
+
+The Azure VM configuration is prepared and locally verified; public deployment
+is pending target/SSH/domain/database details. See [Azure deployment](azure-vm.md).
+
 The backend has exactly three business models, using Django ORM and PostgreSQL.
 Django's built-in auth, session, and Admin tables are unchanged.
 
@@ -325,3 +339,19 @@ bounded. Chart values are reloaded on country changes, manual refresh, or route
 remount after a salary revision. Empty countries show zero count/total, null
 statistics as unavailable, and explanatory text in place of charts. Separate
 frontend hosting, backend source, database schema, and APIs remain unchanged.
+
+## Phase 12: Release integration
+
+The selected Azure VM topology uses systemd-managed Gunicorn on loopback and
+Nginx as the HTTPS entry point and separate React static server. No app feature,
+model, migration, dependency, authentication mechanism, or backend static-serving
+behavior changed. The service and Nginx files are reviewable templates, not proof
+of a public deployment. Their local substitutes passed systemd/Nginx syntax
+checks and actual HTTPS proxy/static/session/API checks.
+
+The browser runner provisions random-prefix test accounts and dated employee
+fixtures, runs the existing scenarios against both frontend servers, optionally
+records a real browser-only demo, and removes only its owned rows/sessions. It
+does not seed/reset databases or store credentials in source. Logs/videos are
+ignored generated artifacts. The final assessment matrix and Azure access/URL
+blockers are explicit in submission.md; final sending remains user-authorized.

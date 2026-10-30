@@ -54,7 +54,7 @@ Refresh `/api/docs/` after updating the server; login needs only credentials the
 ## Build and release checks
 
 ```bash
-python -m pip install -r requirements.txt
+python -m pip install -r backend/requirements.txt
 python backend/manage.py migrate --noinput
 python backend/manage.py migrate --check
 python backend/manage.py makemigrations --check --dry-run
@@ -88,7 +88,7 @@ gunicorn --config gunicorn.conf.py config.wsgi:application
 The config selects the backend directory, binds `0.0.0.0:$PORT` (default 8000),
 uses `$WEB_CONCURRENCY` workers (default 2), a 30-second timeout, and stdout/stderr
 logs. Gunicorn reads these variables from the process environment: source/export
-`.env` first if changing them locally. Django still loads its settings from `.env`
+`backend/.env` first if changing them locally. Django still loads settings from that file
 without overriding process values. Serve behind an HTTPS proxy; enable
 `DJANGO_TRUST_PROXY=true` only if it strips incoming `X-Forwarded-Proto` and sets
 its own trusted value.
@@ -105,13 +105,17 @@ Other HTTP routes redirect to HTTPS. Health exposes no private configuration.
 
 ## Managed hosting
 
+The selected Phase 12 target is an Azure VM. Use [the Azure VM runbook](azure-vm.md)
+and its Nginx/systemd templates for that target. The Render configuration below
+is an earlier optional alternative, not a claim that a Render service exists.
+
 Use one Python service and one PostgreSQL database. For Render's manual web
 service, keep the repository root as working directory and configure Python 3.12
 with a provider-supported fully qualified patch version. Configure:
 
 | Setting | Value |
 | --- | --- |
-| Build | `python -m pip install -r requirements.txt && python backend/manage.py collectstatic --noinput` |
+| Build | `python -m pip install -r backend/requirements.txt && python backend/manage.py collectstatic --noinput` |
 | Pre-deploy/release | `python backend/manage.py migrate --noinput` |
 | Start | `gunicorn --config gunicorn.conf.py config.wsgi:application` |
 | Health | `/api/health/` |

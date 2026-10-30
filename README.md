@@ -1,7 +1,7 @@
 # ACME Salary Management
 
 Salary management for ACME's HR team, built incrementally from the supplied
-assessment. **Implemented: Phases 1–11.** The backend is complete; a separate React/Vite
+assessment. **Phases 1–11 implemented; Phase 12 verified locally, Azure deployment pending.** The backend is complete; a separate React/Vite
 application provides login, logout, protected navigation, a responsive layout,
 employee listing, creation, editing, details, deactivation, salary history,
 salary revisions, and a country-specific compensation dashboard.
@@ -14,6 +14,9 @@ dashboard, including department and salary distribution charts.
 Session login/logout, current-user identity, and CSRF bootstrap are available.
 See the [backend release runbook](docs/backend-release.md) for provisioning and deployment.
 See [frontend setup and separate hosting](frontend/README.md) for the React app.
+See [final assessment coverage and submission checklist](docs/submission.md),
+[Azure VM release steps](docs/azure-vm.md), and the [recorded demo guide](docs/demo.md).
+No public application URL is claimed until the VM deployment is actually verified.
 
 The deterministic `seed_employees` command can populate 10,000 fictional employees
 with current salaries and history. See [seed behavior and verification](docs/seed-data.md).
@@ -26,19 +29,19 @@ Requires Python 3.12 (including its venv/ensurepip support) and running PostgreS
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt
-cp .env.example .env
+python -m pip install -r backend/requirements.txt
+cp backend/.env.example backend/.env
 python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
 ```
 
-Put the generated secret in `.env` as `DJANGO_SECRET_KEY='generated value'`.
+Put the generated secret in `backend/.env` as `DJANGO_SECRET_KEY='generated value'`.
 Set `PGPASSWORD` to a local database password, also quoted as a shell value.
-Do not commit `.env`. The existing settings use `python-dotenv` to read `.env`
+Do not commit `backend/.env`. The existing settings use `python-dotenv` to read `backend/.env`
 without overriding process environment variables. You may also load it explicitly:
 
 ```bash
 set -a
-source .env
+source backend/.env
 set +a
 ```
 
@@ -144,7 +147,7 @@ See [seed details](docs/seed-data.md) before running against a populated databas
 ## Production deployment
 
 Use one Python 3.12 application service and one managed PostgreSQL database.
-Install `requirements.txt` during the build. Configure these environment variables
+Install `backend/requirements.txt` during the build. Configure these environment variables
 through the hosting provider, using a unique generated secret and real DB values:
 
 ```text
@@ -196,7 +199,7 @@ gunicorn --config gunicorn.conf.py config.wsgi:application
 
 Gunicorn reads `PORT` and `WEB_CONCURRENCY` from process environment variables
 (defaults 8000 and 2). Export local overrides before starting it. WhiteNoise
-serves collected Admin assets; no frontend build is required yet.
+serves collected Admin assets. The separate frontend requires its own Vite build.
 Provision the Admin account interactively using `createsuperuser` in a secure
 release shell. Verify the actual HTTPS health URL, Admin login and static assets
 after deployment. `/api/health/` bypasses HTTPS redirection for hosting readiness
@@ -383,5 +386,6 @@ inspected; temporary fixtures were cleaned up. The existing seeded dataset was
 preserved (10,000 employees, 12,501 salaries at this phase's baseline, including a
 pre-existing revision). No public deployment, staging, or commit was performed.
 
-Phase 12 is final integration, deployment, and submission, pending explicit
-instruction. No Phase 12 work was performed.
+Phase 12 release status, deployment steps, assessment coverage, and remaining
+submission items are tracked in [the submission checklist](docs/submission.md).
+The chosen deployment target is an Azure VM; see [Azure VM deployment](docs/azure-vm.md).

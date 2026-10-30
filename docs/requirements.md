@@ -38,6 +38,11 @@ self-service, future revisions, backdated corrections, country transfers, and
 custom report builders. These add complexity beyond salary management and
 country-specific compensation insights. Use one application and one database.
 
+Subsequent hosting decision: the user chose a separate React/Vite frontend and
+unchanged Django static behavior in Phase 8. Phase 12 targets independent Nginx
+frontend and Gunicorn backend services on an Azure VM, with one PostgreSQL
+database. This supersedes the original combined-serving assumption above.
+
 ## Success criteria and delivery sequence
 HR can manage employees and salary revisions and obtain accurate, currency-safe
 summaries over 10,000 seeded employees. Authentication protects salary data;

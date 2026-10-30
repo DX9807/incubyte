@@ -4,7 +4,7 @@ Run from the repository root with dependencies installed and PostgreSQL configur
 
 ```bash
 source .venv/bin/activate
-python -m pip install -r requirements.txt
+python -m pip install -r backend/requirements.txt
 python backend/manage.py migrate
 python backend/manage.py seed_employees --count 10000 --seed 42
 ```
