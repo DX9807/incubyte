@@ -138,3 +138,24 @@ deployment/Gunicorn/HTTP checks passed again. Verification fixtures were removed
 seeded records were preserved, and Git confirmed no backend source changes.
 The separate frontend deployment contract and exact run commands are documented.
 No publication, staging, or commit was performed.
+
+
+Phase 9 was limited to employee management UI. Codex inspected the repository,
+master requirements, and API contracts, then verified the existing 137 backend
+and 12 client tests, build, and three authentication browser scenarios on dev
+and preview before editing. Added employee API helpers, an abortable department
+lookup, explicit create/edit dialog, listing and details pages, and focused
+client/browser tests. No backend source, dependencies, salary history/revision,
+or analytics screens were added.
+
+All 17 client tests and seven browser scenarios passed on both frontend servers.
+Real API checks covered pagination over 10,000 employees, combined filters,
+creation, restricted profile PATCH, deactivation with initial-salary retention,
+validation, request failures/retries, and pending controls. Screenshot review
+led to a bounded table with sticky headers and compact row actions. Only
+verification-prefixed fixtures and temporary authentication records were removed;
+10,000 seeded employees and 12,500 salaries remained intact. Separate hosting
+and the standing prohibition on automatic staging/commits were preserved.
+Final backend verification passed all 137 tests, migrations/model consistency,
+static/schema validation, production settings, Gunicorn configuration, and real
+development/production HTTP checks. No public deployment was performed.

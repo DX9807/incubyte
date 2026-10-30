@@ -255,3 +255,26 @@ SPA HTML for application routes. The existing backend environment settings permi
 the trusted frontend origin/host without adding CORS or changing backend code.
 Static assets are built independently and never installed into Django's static
 root. Node API-client tests and Chromium integration tests verify the contract.
+
+
+## Phase 9: Employee management client
+
+The existing protected routes now render employee listing and `/employees/:id`
+details. A small employee API module delegates cookies, CSRF, errors, and
+cancellation to the existing Fetch client. A shared department lookup hook
+supports loading/retry. No backend route, schema, model, or dependency changes
+are needed.
+
+The listing sends search/filter/page query parameters to the fixed 50-record
+backend paginator, omitting empty filters. URL parameters retain navigation and
+refresh state; filter changes reset the page. AbortControllers prevent obsolete
+requests from replacing current results. A shared explicit Material UI dialog
+handles creation/profile editing, server field errors, and pending controls;
+there is no dynamic form framework or additional state library.
+
+Initial salary is a decimal string with country-derived currency. Profile PATCH
+omits country, currency, and salary. Details show the current salary supplied by
+the employee endpoint. Confirmed status changes preserve the employee and salary
+history. Successful changes refetch server state. Salary history/revision and
+analytics UI remain outside this phase. Frontend hosting remains independent,
+with the same-origin API proxy and SPA fallback documented in frontend/README.md.

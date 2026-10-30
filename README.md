@@ -1,14 +1,15 @@
 # ACME Salary Management
 
 Salary management for ACME's HR team, built incrementally from the supplied
-assessment. **Implemented: Phases 1–8.** The backend is complete; a separate React/Vite
-application provides login, logout, protected navigation, and a responsive layout.
+assessment. **Implemented: Phases 1–9.** The backend is complete; a separate React/Vite
+application provides login, logout, protected navigation, a responsive layout,
+and employee listing, creation, editing, details, and deactivation.
 Django Admin and staff-only REST APIs
 manage employees with salary revisions and history. Admin history stays read-only. See
 [requirements](docs/requirements.md), [database design](docs/architecture.md), and
 [API documentation](docs/api.md), and [AI usage](docs/ai-usage.md).
-Country-specific salary analytics are available through the API. Frontend Dashboard
-and Employees routes are placeholders for later phases.
+Country-specific salary analytics are available through the API. The frontend
+Dashboard remains a placeholder for its later phase.
 Session login/logout, current-user identity, and CSRF bootstrap are available.
 See the [backend release runbook](docs/backend-release.md) for provisioning and deployment.
 See [frontend setup and separate hosting](frontend/README.md) for the React app.
@@ -120,7 +121,9 @@ npm run dev
 ```
 
 Open `http://127.0.0.1:5173` and sign in with an active HR staff account. The
-frontend proxies API requests locally and builds independently with
+frontend proxies API requests to port 9000 by default; start Django there with
+`python backend/manage.py runserver 127.0.0.1:9000`, or set
+`ACME_API_PROXY_TARGET` in `frontend/.env` to match your backend. It builds independently with
 `npm run build`. Django does not serve its HTML or bundle, as requested.
 
 ## Seed data
@@ -329,4 +332,21 @@ production checks, and backend HTTP startup flows passed. Backend source and
 the 10,000-employee/12,500-salary dataset were preserved. No deployment, staging,
 or commit was performed.
 
-Phase 9 will add the employee management UI after an explicit instruction to proceed.
+Phase 9 adds the Material UI employee table, 50-record server pagination, search,
+combined department/country/status filters, create/edit dialogs, profile details,
+current annual salary/currency, and confirmed deactivation/reactivation. URL
+filters survive refresh/navigation. Backend field errors, retries, empty/loading
+states, and pending-save controls are handled without changing backend contracts.
+Country and current salary remain read-only during profile editing. No salary
+revision/history or analytics UI was added. See `frontend/README.md` for usage and
+disposable browser-test fixtures.
+
+Phase 9 verification: 17 client tests, the production Vite build, and all seven
+Chromium scenarios passed on both dev and built preview. The existing 10,000-row
+dataset was used for pagination; screenshots were inspected. Backend source and
+seeded records were preserved. No staging, commit, or public deployment occurred.
+Final backend checks passed all 137 tests, migrations with nothing pending,
+model consistency, static/schema validation, production settings, Gunicorn
+configuration, and development/production HTTP auth and business flows.
+
+Phase 10 is salary revision and history UI, pending explicit instruction.
