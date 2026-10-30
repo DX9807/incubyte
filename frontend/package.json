@@ -10,7 +10,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node tests/api.test.js && node tests/employees.test.js && node tests/salaries.test.js",
+    "test": "node tests/api.test.js && node tests/employees.test.js && node tests/salaries.test.js && node tests/analytics.test.js",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -19,7 +19,9 @@
     "@mui/material": "9.5.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "react-router-dom": "7.18.5"
+    "react-is": "19.3.1",
+    "react-router-dom": "7.18.5",
+    "recharts": "3.10.1"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",

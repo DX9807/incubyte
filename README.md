@@ -1,16 +1,16 @@
 # ACME Salary Management
 
 Salary management for ACME's HR team, built incrementally from the supplied
-assessment. **Implemented: Phases 1–10.** The backend is complete; a separate React/Vite
+assessment. **Implemented: Phases 1–11.** The backend is complete; a separate React/Vite
 application provides login, logout, protected navigation, a responsive layout,
 employee listing, creation, editing, details, deactivation, salary history,
-and salary revisions.
+salary revisions, and a country-specific compensation dashboard.
 Django Admin and staff-only REST APIs
 manage employees with salary revisions and history. Admin history stays read-only. See
 [requirements](docs/requirements.md), [database design](docs/architecture.md), and
 [API documentation](docs/api.md), and [AI usage](docs/ai-usage.md).
-Country-specific salary analytics are available through the API. The frontend
-Dashboard remains a placeholder for its later phase.
+Country-specific salary analytics are available through the API and the React
+dashboard, including department and salary distribution charts.
 Session login/logout, current-user identity, and CSRF bootstrap are available.
 See the [backend release runbook](docs/backend-release.md) for provisioning and deployment.
 See [frontend setup and separate hosting](frontend/README.md) for the React app.
@@ -366,4 +366,22 @@ HTTP auth/salary/startup checks passed. Desktop/mobile screenshots were inspecte
 Temporary fixtures were removed; the 10,000 seeded employees and 12,500 salaries
 remained intact. No public deployment, staging, or commit was performed.
 
-Phase 11 is the compensation dashboard, pending explicit instruction.
+Phase 11 adds the compensation dashboard with a country selector, active employee
+count, total/average/minimum/maximum annual base salary, department average-salary
+comparison, and salary-band histogram. Recharts is required by the master prompt;
+its React-compatible peer is pinned, and charts have a separate Vite chunk.
+Loading/error/retry/empty states, exact chart value tables, canceled stale
+requests, and refresh/deep links are supported. Backend data remains authoritative,
+with no cross-currency totals or client aggregation. No backend source changed.
+
+Phase 11 verification: clean npm ci, all 27 client tests, the production build,
+and all 13 Chromium scenarios on each of dev and built preview passed. All 137
+backend tests, migrations/model consistency, static/schema validation, production
+settings, Gunicorn configuration, and real HTTP analytics/auth/salary checks
+passed. The analytics HTTP checks covered all five countries. Screenshots were
+inspected; temporary fixtures were cleaned up. The existing seeded dataset was
+preserved (10,000 employees, 12,501 salaries at this phase's baseline, including a
+pre-existing revision). No public deployment, staging, or commit was performed.
+
+Phase 12 is final integration, deployment, and submission, pending explicit
+instruction. No Phase 12 work was performed.

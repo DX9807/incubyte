@@ -299,3 +299,29 @@ A successful revision reloads employee details through the existing refresh path
 remounting history and fetching both current salary and history from the server.
 No optimistic salary mutation, cache library, new backend endpoint, schema,
 dependency, or analytics screen is introduced. Historical rows are read-only.
+
+
+## Phase 11: Compensation dashboard client
+
+DashboardPage replaces the last placeholder while retaining protected routing and
+the existing layout. Country is a URL parameter (default IN), selected from the
+same five-country mapping as employee forms. analyticsApi loads the existing
+three reports concurrently with one shared cancellation signal and checks their
+currencies against that selection. A complete successful report set replaces
+loading state; failures expose retry without fabricated zero/partial summaries.
+Aborted/stale responses cannot restore another country's data.
+
+Material UI cards display server-returned employee count and salary aggregates.
+CompensationCharts uses Recharts for average salary by department and employee
+count by backend salary band; animations are disabled. Exact data tables are
+available under native disclosure controls. Financial strings remain unchanged
+for display/tooltips; numeric copies serve only chart coordinates. No employee
+fetch, frontend aggregation, currency conversion, report builder, or cache is added.
+
+Recharts and its matching react-is peer are pinned. Responsive chart sizing follows
+[the official sizing guide](https://recharts.github.io/en-US/guide/sizes/); the
+existing Vite vendor chunks gain a charts chunk to keep the application bundle
+bounded. Chart values are reloaded on country changes, manual refresh, or route
+remount after a salary revision. Empty countries show zero count/total, null
+statistics as unavailable, and explanatory text in place of charts. Separate
+frontend hosting, backend source, database schema, and APIs remain unchanged.

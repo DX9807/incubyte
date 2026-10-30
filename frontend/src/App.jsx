@@ -4,7 +4,7 @@ import { useAuth } from './auth/AuthContext';
 import AppLayout from './components/AppLayout';
 import Brand from './components/Brand';
 import LoginPage from './pages/LoginPage';
-import WorkspacePlaceholder from './pages/WorkspacePlaceholder';
+import DashboardPage from './pages/DashboardPage';
 import EmployeesPage from './pages/EmployeesPage';
 import EmployeeDetailsPage from './pages/EmployeeDetailsPage';
 
@@ -28,7 +28,7 @@ export default function App() {
     <Route element={<ProtectedRoute />}>
       <Route element={<AppLayout />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<WorkspacePlaceholder section="Dashboard" icon="dashboard" description="An overview of compensation across your organization." />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/employees" element={<EmployeesPage />} />
         <Route path="/employees/:id" element={<EmployeeDetailsPage />} />
         <Route path="*" element={<Box><Typography component="h1" variant="h3" sx={{ mb: 2 }}>Page not found</Typography><Button href="/dashboard">Back to Dashboard</Button></Box>} />

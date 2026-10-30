@@ -119,8 +119,10 @@ test('create, detail, immutable fields, profile edit and deactivation preserve i
   expect(history).toHaveLength(1);
   expect(history[0].annual_salary).toBe('125000.25');
   await page.getByRole('link', { name: 'Back to employees' }).click();
+  await rowsLoaded(page);
   await page.getByRole('textbox', { name: 'Search employees' }).fill(employee.employee_code);
   await page.getByRole('button', { name: 'Search', exact: true }).click();
+  await expect.poll(() => new URL(page.url()).searchParams.get('search')).toBe(employee.employee_code);
   await choose(page, page, 'Status', 'Active');
   await expect(page.getByText('No employees found', { exact: true })).toBeVisible();
   await choose(page, page, 'Status', 'Inactive');

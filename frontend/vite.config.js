@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: { output: { manualChunks: {
         react: ['react', 'react-dom', 'react-router-dom'],
         mui: ['@mui/material', '@emotion/react', '@emotion/styled'],
+        charts: ['recharts'],
       } } },
     },
   };

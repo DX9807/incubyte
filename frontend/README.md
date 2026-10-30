@@ -1,12 +1,12 @@
-# ACME Salary Management frontend — Phases 8–10
+# ACME Salary Management frontend — Phases 8–11
 
 A separate React/Vite application using Material UI, React Router, and native
 Fetch. The Django backend source is unchanged. Login, logout, identity/session
 checks, protected routes, responsive layout, and navigation work against the
 existing APIs. Employee listing, creation, profile editing, details, and active
 status management are implemented. Employee details also show salary history
-and support dated salary revisions. Dashboard remains a placeholder for the
-later analytics UI phase.
+and support dated salary revisions. The compensation dashboard shows country
+summary metrics, department comparisons, and salary distribution using Recharts.
 
 ## Run locally
 
@@ -122,7 +122,7 @@ read -r -p 'HR test username: ' ACME_E2E_USERNAME
 read -r -s -p 'HR test password: ' ACME_E2E_PASSWORD
 read -r -p 'Unique disposable employee fixture prefix (max 20 characters): ' ACME_E2E_EMPLOYEE_PREFIX
 export ACME_E2E_USERNAME ACME_E2E_PASSWORD ACME_E2E_EMPLOYEE_PREFIX
-# From frontend/: prepare one historical fixture for the salary scenarios.
+# From frontend/: prepare historical fixtures for salary/dashboard scenarios.
 ../.venv/bin/python ../backend/manage.py shell <<'PYFIXTURE'
 import os
 from datetime import timedelta
@@ -147,17 +147,31 @@ with transaction.atomic():
                               effective_from=timezone.localdate() - timedelta(days=days))
         record.full_clean()
         record.save()
+    dashboard_employee = Employee(
+        employee_code=prefix + '-DASH', full_name='Dashboard revision fixture',
+        email=prefix + '-dash@example.com', country='GB',
+        department=Department.objects.get(name='Engineering'),
+        job_title='Engineer', is_active=True,
+    )
+    dashboard_employee.full_clean()
+    dashboard_employee.save()
+    record = SalaryRecord(employee=dashboard_employee, annual_salary='50000.00',
+                          effective_from=timezone.localdate() - timedelta(days=30))
+    record.full_clean()
+    record.save()
 PYFIXTURE
 npm run test:e2e
 unset ACME_E2E_USERNAME ACME_E2E_PASSWORD ACME_E2E_EMPLOYEE_PREFIX
 ```
 
 Tests use `http://127.0.0.1:5173` by default. Set `ACME_E2E_BASE_URL` to the preview
-or separately hosted frontend URL to test the production build. Nine scenarios
+or separately hosted frontend URL to test the production build. Thirteen scenarios
 verify authentication, pagination, combined filters/search, create/edit, profile
 PATCH restrictions, deactivation with salary retention, validation, request
 failures/retries, pending controls, deep links, salary history/revisions, stale
-revision validation, retained records, same-day restrictions, and mobile layout. Failed
+revision validation, retained records, same-day restrictions, all-country dashboard
+values/charts, error/empty states, rapid country changes, post-revision analytics,
+and mobile layout. Failed
 traces/results are ignored by Git; use test-only accounts. `PLAYWRIGHT_BROWSERS_PATH`, if set,
 must be consistent for browser installation and test execution.
 
@@ -250,3 +264,67 @@ and logout invalidation behind a simulated trusted HTTPS proxy. Temporary HR,
 employee, salary, and session fixtures were removed; 10,000 seeded employees and
 12,500 salaries were preserved. Backend source and dependencies are unchanged.
 No public deployment, staging, or commit was performed.
+
+
+## Compensation dashboard — Phase 11
+
+Dashboard defaults to India. Select India, United States, United Kingdom,
+Germany, or Singapore; the country is retained in the URL for refresh/deep links
+(e.g. `/dashboard?country=GB`). There is no combined-country view or currency
+conversion. The cards show active employees with current salaries, total/average
+annual base salary, and minimum/maximum salary in the selected country's currency.
+Employees without an eligible salary and inactive employees are excluded by the
+existing backend report rules.
+
+The department bar chart compares **average annual base salary**; the distribution
+histogram counts employees in Django's five fixed country-specific salary bands.
+Open **View department values** or **View salary band values** for exact values.
+Charts use compact axis labels and tooltips, with currency stated in their titles.
+Django calculates all aggregates; the client does not download/aggregate employees.
+Money stays as returned decimal strings for cards, table values, and money tooltips;
+numeric copies are used only for chart coordinates.
+
+The three reports load together. Loading hides old-country figures, report
+failures offer retry, currency mismatches are rejected, and countries with no
+eligible employees show zero total/count with unavailable salary statistics.
+Obsolete requests are canceled/ignored during country changes. **Refresh** reloads
+the selected country; returning from employee details also fetches fresh reports,
+so salary revisions appear on the next dashboard load. Re-select the country if
+returning via the sidebar's default `/dashboard` link. No polling or client cache
+is added.
+
+Recharts 3.10.1 is the chart dependency required by the master prompt; its
+react-is peer is pinned to 19.3.1 to match React. The chart bundle is split from
+the app using the existing Vite chunk configuration. Frontend hosting stays
+separate, with the same API proxy and SPA fallback described above.
+
+The browser fixture setup now creates an inactive US salary-history fixture and
+an active GB dashboard fixture with a historical GBP 50,000 salary. The dashboard
+scenario revises only its prefixed GB fixture through the UI to verify fresh
+metrics/charts. Each full browser run needs a new prefix and both fixtures;
+restore the disposable database or remove only verification-owned records afterward.
+
+
+## Phase 11 verification results
+
+Baseline checks passed all 23 client and 137 backend tests, the build, and nine
+browser scenarios on each frontend server. After implementation, clean npm ci,
+all 27 client tests, and the production build passed without chunk-size warnings.
+All 13 Chromium scenarios passed on both dev and built preview (26 executions),
+including all five countries, comparison of every card/department/band value to
+real API responses, responsive charts, deep-link refresh, error/retry/empty data,
+late responses after country changes, and refreshed analytics after a UI salary
+revision on a disposable active GB fixture. Desktop/mobile screenshots were
+inspected; mobile salary-band labels were angled for readability.
+After that adjustment and the clean install, all four dashboard scenarios passed
+again on both dev and preview; the updated mobile screenshot was inspected.
+
+All 137 backend tests passed again. Migrations had nothing pending; no model
+changes were detected. Static collection, strict schema validation, strict
+production checks, Gunicorn configuration, and real Gunicorn HTTP checks passed.
+The production HTTP checks included all three analytics reports for all five
+countries, auth/CSRF, salary revisions, readiness, docs/static, and HTTPS redirect
+behind a simulated trusted HTTPS proxy. Temporary fixtures were removed while
+preserving the baseline's 10,000 seeded employees and 12,501 salaries (including
+one pre-existing revision). Backend source is unchanged. No public deployment,
+Git staging, or commit was performed; Phase 12 remains unstarted.

@@ -184,3 +184,41 @@ configuration, and actual production HTTP auth/salary flows. Screenshots were
 inspected. Verification-owned employee/salary/user/session records were removed;
 10,000 seeded employees and 12,500 salaries remained intact. No public deployment,
 Git staging, or commit was performed; work stopped before the dashboard phase.
+
+
+Phase 11 was limited to the compensation dashboard. Codex inspected the clean
+repository, master phase requirements, and existing analytics contracts before
+coding. Baseline verification passed 23 client tests, all 137 backend tests,
+the production build, and nine browser scenarios on each frontend server.
+Reused authentication, the Fetch client, country mapping, and separate hosting.
+Added the dashboard, a small analytics loader, and two Recharts charts. Recharts
+3.10.1 and react-is 19.3.1 are pinned as required chart/peer dependencies; official
+Recharts guidance and package peer metadata informed responsive sizing.
+
+Django remains responsible for all aggregation. Country-scoped reports load
+together, financial strings stay intact, and cancellation/currency checks prevent
+stale or mixed-country views. Charts compare department average salary and counts
+per backend salary band; exact values are also accessible in disclosure tables.
+Four client tests and four browser scenarios verify the report contract, all five
+countries, chart values, empty/error states, switching during pending requests,
+and refreshed analytics after revising a verification-owned active GB employee.
+
+The first browser run caught an incorrect test expectation when reselecting the
+already-selected default country and an existing employee test racing navigation
+and filter application. Test synchronization/expectations were corrected without
+changing employee application behavior. All 13 scenarios then passed on dev and
+production preview. Screenshot review led to angled distribution labels for
+mobile readability. The chart dependency initially pushed the application chunk
+over Vite's warning threshold; extending its existing vendor chunks resolved it.
+
+Clean npm ci, all 27 client tests, the production build, and all 137 backend
+tests passed. Migrations had nothing pending; model consistency, static files,
+strict schema validation, production checks, and Gunicorn configuration passed.
+Actual production HTTP checks verified analytics for every supported country,
+auth/CSRF, salary flows, static/docs, and readiness/HTTPS behavior. Backend source
+remained unchanged. Temporary verification fixtures were removed, preserving the
+existing seeded dataset, including its pre-existing additional salary record.
+No public deployment, Phase 12 work, Git staging, or commit was performed.
+After the final mobile chart adjustment and clean install, all four dashboard
+browser scenarios passed again on both servers, and the updated screenshot was
+inspected. Temporary fixtures were removed and baseline seed counts preserved.
