@@ -159,3 +159,28 @@ and the standing prohibition on automatic staging/commits were preserved.
 Final backend verification passed all 137 tests, migrations/model consistency,
 static/schema validation, production settings, Gunicorn configuration, and real
 development/production HTTP checks. No public deployment was performed.
+
+
+Phase 10 was limited to salary management UI. Codex inspected the clean Phase 9
+repository and master/API requirements, then verified 137 backend tests, 17 client
+tests, the production build, and seven browser scenarios on each frontend server
+before implementation. Reused the current salary card, existing CSRF-aware Fetch
+client, and employee refresh path; added a small salary API/validation module,
+history component, and explicit revision dialog. No backend source, dependency,
+analytics, or later-phase feature was added.
+
+Added six client tests and two browser scenarios. Real API writes on a uniquely
+prefixed historical fixture verify append-only history, increases/decreases,
+concurrent stale-history validation, current salary refresh, readonly currency,
+failed-save retention/retry, and pending-submit protection. The browser selector
+for the required date label was corrected after an initial timeout; the final
+nine scenarios passed on both dev and preview. The initial Gunicorn HTTP check
+used a JSON Accept header on HTML docs; that verification client was corrected,
+and HTTP checks rerun without repeating the already-passing backend suite.
+
+Final checks passed all 23 client and 137 backend tests, the build, migrations,
+model consistency, static/schema validation, production settings, Gunicorn
+configuration, and actual production HTTP auth/salary flows. Screenshots were
+inspected. Verification-owned employee/salary/user/session records were removed;
+10,000 seeded employees and 12,500 salaries remained intact. No public deployment,
+Git staging, or commit was performed; work stopped before the dashboard phase.

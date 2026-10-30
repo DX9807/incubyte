@@ -278,3 +278,24 @@ the employee endpoint. Confirmed status changes preserve the employee and salary
 history. Successful changes refetch server state. Salary history/revision and
 analytics UI remain outside this phase. Frontend hosting remains independent,
 with the same-origin API proxy and SPA fallback documented in frontend/README.md.
+
+
+## Phase 10: Salary management client
+
+Employee details retain their current salary card and embed a small SalaryHistory
+component. It GETs the existing nested salary endpoint with cancellation, renders
+backend ordering, and owns independent loading/empty/retry states. A dedicated
+Material UI dialog POSTs only annual_salary (decimal string) and effective_from;
+currency stays read-only, with derivation and validation owned by Django.
+
+Client checks cover positive amounts, existing precision/range, valid calendar
+dates, strictly increasing effective dates, and the UTC date boundary matching
+the backend. These checks improve feedback without replacing server validation:
+a stale-history/concurrent-write rejection remains a visible field error. A
+pending ref guards submission synchronously; controls and dismissal are disabled
+until the request finishes. Writes are never automatically retried.
+
+A successful revision reloads employee details through the existing refresh path,
+remounting history and fetching both current salary and history from the server.
+No optimistic salary mutation, cache library, new backend endpoint, schema,
+dependency, or analytics screen is introduced. Historical rows are read-only.

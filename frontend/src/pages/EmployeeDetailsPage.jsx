@@ -5,6 +5,7 @@ import { countryName, employeesApi, formatSalary } from '../api/employees';
 import { useAuth } from '../auth/AuthContext';
 import AppIcon from '../components/AppIcon';
 import EmployeeFormDialog from '../components/EmployeeFormDialog';
+import SalaryHistory from '../components/SalaryHistory';
 import useDepartments from '../hooks/useDepartments';
 
 export default function EmployeeDetailsPage() {
@@ -75,13 +76,14 @@ export default function EmployeeDetailsPage() {
               ].map(([label, value]) => <Box key={label} sx={{ minWidth: 0 }}><Typography component="dt" sx={{ fontSize: 12, color: 'text.secondary', mb: 0.8 }}>{label}</Typography><Typography component="dd" sx={{ m: 0, fontSize: 14, fontWeight: 550, overflowWrap: 'anywhere' }}>{value}</Typography></Box>)}
             </Box>
           </Paper>
-          <Paper variant="outlined" sx={{ p: 3.5, borderRadius: 3 }}>
+          <Paper component="section" aria-label="Current salary" variant="outlined" sx={{ p: 3.5, borderRadius: 3 }}>
             <Typography component="h2" variant="h5" sx={{ mb: 3 }}>Current salary</Typography>
             <Typography color="text.secondary" sx={{ fontSize: 13, mb: 1.5 }}>Annual base salary</Typography>
             <Typography sx={{ fontSize: { xs: 22, md: 26 }, fontWeight: 650, color: 'primary.dark', fontVariantNumeric: 'tabular-nums', overflowWrap: 'anywhere' }}>{formatSalary(employee.annual_salary, employee.currency)}</Typography>
             <Typography color="text.secondary" sx={{ fontSize: 12, mt: 2 }}>Current compensation in the employee&apos;s country currency.</Typography>
           </Paper>
         </Box>
+        <SalaryHistory employee={employee} onRevised={() => { setVersion(value => value + 1); setNotice('Salary revision saved.'); }} />
         <Paper variant="outlined" sx={{ p: 3, mt: 3, borderRadius: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
           <Box><Typography sx={{ fontWeight: 600, mb: 0.5 }}>Employee status</Typography><Typography color="text.secondary" sx={{ fontSize: 13 }}>Deactivation retains the employee profile and salary records.</Typography></Box>
           <Button variant="outlined" color={employee.is_active ? 'error' : 'primary'} onClick={() => { setSaveError(''); setConfirm(true); }}>{employee.is_active ? 'Deactivate employee' : 'Reactivate employee'}</Button>

@@ -93,7 +93,7 @@ test('create, detail, immutable fields, profile edit and deactivation preserve i
   await expect(dialog).not.toBeVisible();
   await page.getByRole('link', { name: employee.full_name, exact: true }).click();
   await expect(page.getByRole('heading', { name: employee.full_name, exact: true })).toBeVisible();
-  await expect(page.getByText('USD 125,000.25', { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Current salary', exact: true }).getByText('USD 125,000.25', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Edit profile', exact: true }).click();
   const edit = page.getByRole('dialog', { name: 'Edit employee', exact: true });
   await expect(edit.getByRole('textbox', { name: 'Country', exact: true })).toHaveAttribute('readonly', '');

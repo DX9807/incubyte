@@ -10,7 +10,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node tests/api.test.js && node tests/employees.test.js",
+    "test": "node tests/api.test.js && node tests/employees.test.js && node tests/salaries.test.js",
     "test:e2e": "playwright test"
   },
   "dependencies": {

@@ -1,9 +1,10 @@
 # ACME Salary Management
 
 Salary management for ACME's HR team, built incrementally from the supplied
-assessment. **Implemented: Phases 1–9.** The backend is complete; a separate React/Vite
+assessment. **Implemented: Phases 1–10.** The backend is complete; a separate React/Vite
 application provides login, logout, protected navigation, a responsive layout,
-and employee listing, creation, editing, details, and deactivation.
+employee listing, creation, editing, details, deactivation, salary history,
+and salary revisions.
 Django Admin and staff-only REST APIs
 manage employees with salary revisions and history. Admin history stays read-only. See
 [requirements](docs/requirements.md), [database design](docs/architecture.md), and
@@ -349,4 +350,20 @@ Final backend checks passed all 137 tests, migrations with nothing pending,
 model consistency, static/schema validation, production settings, Gunicorn
 configuration, and development/production HTTP auth and business flows.
 
-Phase 10 is salary revision and history UI, pending explicit instruction.
+Phase 10 adds newest-first salary history and a revision dialog to employee
+details, retaining the existing current salary display. The form validates
+positive decimal amounts and effective dates, shows backend validation errors,
+keeps currency read-only, prevents duplicate saves, and refreshes current salary
+and history after success. Prior records remain intact. No backend source or
+dependency changes were needed. See `frontend/README.md` for usage and historical
+browser-test fixture setup.
+
+Phase 10 verification: all 23 client tests, the production Vite build, and nine
+Chromium scenarios on each of dev and built preview passed. All 137 backend
+tests passed again. Migration/model consistency, static collection, strict
+OpenAPI validation, production settings, Gunicorn config, and real production
+HTTP auth/salary/startup checks passed. Desktop/mobile screenshots were inspected.
+Temporary fixtures were removed; the 10,000 seeded employees and 12,500 salaries
+remained intact. No public deployment, staging, or commit was performed.
+
+Phase 11 is the compensation dashboard, pending explicit instruction.

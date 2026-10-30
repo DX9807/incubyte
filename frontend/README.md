@@ -1,11 +1,12 @@
-# ACME Salary Management frontend — Phases 8–9
+# ACME Salary Management frontend — Phases 8–10
 
 A separate React/Vite application using Material UI, React Router, and native
 Fetch. The Django backend source is unchanged. Login, logout, identity/session
 checks, protected routes, responsive layout, and navigation work against the
 existing APIs. Employee listing, creation, profile editing, details, and active
-status management are implemented. Dashboard remains a placeholder; salary
-history/revision screens and analytics UI belong to later phases.
+status management are implemented. Employee details also show salary history
+and support dated salary revisions. Dashboard remains a placeholder for the
+later analytics UI phase.
 
 ## Run locally
 
@@ -119,17 +120,44 @@ set a temporary HR test account securely in the environment, then run:
 ```bash
 read -r -p 'HR test username: ' ACME_E2E_USERNAME
 read -r -s -p 'HR test password: ' ACME_E2E_PASSWORD
-read -r -p 'Unique disposable employee fixture prefix: ' ACME_E2E_EMPLOYEE_PREFIX
+read -r -p 'Unique disposable employee fixture prefix (max 20 characters): ' ACME_E2E_EMPLOYEE_PREFIX
 export ACME_E2E_USERNAME ACME_E2E_PASSWORD ACME_E2E_EMPLOYEE_PREFIX
+# From frontend/: prepare one historical fixture for the salary scenarios.
+../.venv/bin/python ../backend/manage.py shell <<'PYFIXTURE'
+import os
+from datetime import timedelta
+from django.db import transaction
+from django.utils import timezone
+from employees.models import Department, Employee
+from compensation.models import SalaryRecord
+
+prefix = os.environ['ACME_E2E_EMPLOYEE_PREFIX']
+assert 1 <= len(prefix) <= 20
+with transaction.atomic():
+    employee = Employee(
+        employee_code=prefix + '-SALARY', full_name='Salary revision fixture',
+        email=prefix + '-salary@example.com', country='US',
+        department=Department.objects.get(name='Engineering'),
+        job_title='Engineer', is_active=False,
+    )
+    employee.full_clean()
+    employee.save()
+    for days, amount in [(30, '100000.00'), (15, '125000.25')]:
+        record = SalaryRecord(employee=employee, annual_salary=amount,
+                              effective_from=timezone.localdate() - timedelta(days=days))
+        record.full_clean()
+        record.save()
+PYFIXTURE
 npm run test:e2e
 unset ACME_E2E_USERNAME ACME_E2E_PASSWORD ACME_E2E_EMPLOYEE_PREFIX
 ```
 
 Tests use `http://127.0.0.1:5173` by default. Set `ACME_E2E_BASE_URL` to the preview
-or separately hosted frontend URL to test the production build. Seven scenarios
+or separately hosted frontend URL to test the production build. Nine scenarios
 verify authentication, pagination, combined filters/search, create/edit, profile
 PATCH restrictions, deactivation with salary retention, validation, request
-failures/retries, pending controls, deep links, and mobile layout. Failed
+failures/retries, pending controls, deep links, salary history/revisions, stale
+revision validation, retained records, same-day restrictions, and mobile layout. Failed
 traces/results are ignored by Git; use test-only accounts. `PLAYWRIGHT_BROWSERS_PATH`, if set,
 must be consistent for browser installation and test execution.
 
@@ -161,7 +189,7 @@ writes reload the relevant server data. Loading, empty results, field errors,
 failed-request retry, and pending-save controls are supported. If no departments
 exist, an administrator must create one before employee creation.
 
-Salary history/revision and analytics screens are not part of this phase.
+Salary history/revision was added in Phase 10 below; analytics screens remain pending.
 
 ## Phase 9 verification results
 
@@ -176,3 +204,49 @@ Final backend checks passed all 137 tests, migrations (nothing pending), model
 consistency, static collection, strict OpenAPI validation, production settings,
 Gunicorn configuration, and real development/production HTTP startup flows.
 No dependencies or backend source changed. No staging or commit was performed.
+
+
+## Salary management — Phase 10
+
+Open an employee's details to view current annual salary and the history table,
+ordered by effective date newest first. Click **Revise salary**, enter a positive
+annual amount and effective date, then **Save revision**. Currency is read-only
+and derived by Django from country. Decreases are allowed; dates must be later
+than the latest salary and no later than today in UTC. Same-day initial salaries
+cannot be revised again that day. This also applies to inactive employees.
+
+The form validates amount precision/range and calendar/date rules, displays
+server field/non-field errors, retains entered values after failure, and blocks
+duplicate submissions and dialog dismissal while saving. Django remains the
+source of truth if another HR user has changed history since it was loaded.
+Successful revisions reload current salary and history. Historical records have
+no edit/delete controls. History has independent loading, error/retry, and empty
+states; revisions are unavailable when history is missing or cannot be loaded.
+
+The browser salary fixture above deliberately uses historical dates through
+trusted ORM setup in the disposable database, since the employee creation API
+always dates an initial salary today. Each browser run mutates this fixture;
+use a fresh prefix and recreate it for dev and preview runs separately. To run
+only the existing auth/employee scenarios without the historical fixture, use
+`npm run test:e2e -- auth.spec.js employees.spec.js`.
+
+
+## Phase 10 verification results
+
+Before edits, all 137 backend tests, 17 client tests, the production build, and
+seven browser scenarios on each of dev and preview passed. Final verification
+passed 23 client tests and all nine Chromium scenarios on both frontend servers
+(18 successful browser executions). Desktop/mobile screenshots were inspected.
+The revision scenario exercised real API writes on a disposable inactive employee,
+including a concurrent stale-history rejection, salary increase/decrease,
+retained original rows, same-day blocking, and refreshed detail/list values.
+
+All 137 backend tests passed again. Migrations ran with nothing pending; no model
+changes were detected. Static collection, strict OpenAPI validation, strict
+production settings checks, and Gunicorn configuration passed. Actual Gunicorn
+HTTP checks verified readiness, HTTPS redirect, docs/static assets, anonymous
+CSRF rejection, staff login, salary revision/history, updated current salary,
+and logout invalidation behind a simulated trusted HTTPS proxy. Temporary HR,
+employee, salary, and session fixtures were removed; 10,000 seeded employees and
+12,500 salaries were preserved. Backend source and dependencies are unchanged.
+No public deployment, staging, or commit was performed.
